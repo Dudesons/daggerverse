@@ -27,3 +27,4 @@ dist/
 
 # CI folders
 **/node_modules/
+demo/

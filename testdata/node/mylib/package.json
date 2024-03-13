@@ -1,6 +1,7 @@
 {
   "name": "@dudesons/example-test",
   "type": "module",
+  "version": "1.0.0",
   "private": true,
   "license": "UNLICENSED",
   "homepage": "https://github.com/peacock27/service-common",

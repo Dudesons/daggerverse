@@ -184,6 +184,9 @@ type ContainerPublishOpts = dagger.ContainerPublishOpts
 // ContainerTerminalOpts contains options for Container.Terminal
 type ContainerTerminalOpts = dagger.ContainerTerminalOpts
 
+// ContainerWithDefaultTerminalCmdOpts contains options for Container.WithDefaultTerminalCmd
+type ContainerWithDefaultTerminalCmdOpts = dagger.ContainerWithDefaultTerminalCmdOpts
+
 // ContainerWithDirectoryOpts contains options for Container.WithDirectory
 type ContainerWithDirectoryOpts = dagger.ContainerWithDirectoryOpts
 
@@ -356,11 +359,11 @@ type Node = dagger.Node
 
 type WithNodeFunc = dagger.WithNodeFunc
 
+// NodeBumpVersionOpts contains options for Node.BumpVersion
+type NodeBumpVersionOpts = dagger.NodeBumpVersionOpts
+
 // NodeOciBuildOpts contains options for Node.OciBuild
 type NodeOciBuildOpts = dagger.NodeOciBuildOpts
-
-// NodeParallelTestOpts contains options for Node.ParallelTest
-type NodeParallelTestOpts = dagger.NodeParallelTestOpts
 
 // NodePipelineOpts contains options for Node.Pipeline
 type NodePipelineOpts = dagger.NodePipelineOpts
@@ -374,11 +377,17 @@ type NodeSetupSystemOpts = dagger.NodeSetupSystemOpts
 // NodeShellOpts contains options for Node.Shell
 type NodeShellOpts = dagger.NodeShellOpts
 
-// NodeTestOpts contains options for Node.Test
-type NodeTestOpts = dagger.NodeTestOpts
-
 // NodeWithAutoSetupOpts contains options for Node.WithAutoSetup
 type NodeWithAutoSetupOpts = dagger.NodeWithAutoSetupOpts
+
+// NodeWithCacheOpts contains options for Node.WithCache
+type NodeWithCacheOpts = dagger.NodeWithCacheOpts
+
+// NodeWithDirectoryOpts contains options for Node.WithDirectory
+type NodeWithDirectoryOpts = dagger.NodeWithDirectoryOpts
+
+// NodeWithFileOpts contains options for Node.WithFile
+type NodeWithFileOpts = dagger.NodeWithFileOpts
 
 // NodeWithNpmOpts contains options for Node.WithNpm
 type NodeWithNpmOpts = dagger.NodeWithNpmOpts
@@ -667,6 +676,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return nil, (*Ci).Yq(&parent, ctx, testDataSrc)
+		case "Autodetection":
+			var parent Ci
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var testDataSrc *Directory
+			if inputArgs["testDataSrc"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["testDataSrc"]), &testDataSrc)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testDataSrc", err))
+				}
+			}
+			return nil, (*Ci).Autodetection(&parent, ctx, testDataSrc)
 		case "Node":
 			var parent Ci
 			err = json.Unmarshal(parentJSON, &parent)
@@ -691,6 +714,10 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				dag.TypeDef().WithObject("Ci").
 					WithFunction(
 						dag.Function("Yq",
+							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
+							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
+					WithFunction(
+						dag.Function("Autodetection",
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(

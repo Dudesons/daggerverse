@@ -25,5 +25,6 @@ dagger call -m github.com/Dudesons/daggerverse/secret-manager \
 
 - [ ] Add aws secret manager
 - [ ] Add vault
+- [ ] Add sops
 - [ ] Improve documentation
 

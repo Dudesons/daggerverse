@@ -157,6 +157,9 @@ type ContainerPublishOpts = dagger.ContainerPublishOpts
 // ContainerTerminalOpts contains options for Container.Terminal
 type ContainerTerminalOpts = dagger.ContainerTerminalOpts
 
+// ContainerWithDefaultTerminalCmdOpts contains options for Container.WithDefaultTerminalCmd
+type ContainerWithDefaultTerminalCmdOpts = dagger.ContainerWithDefaultTerminalCmdOpts
+
 // ContainerWithDirectoryOpts contains options for Container.WithDirectory
 type ContainerWithDirectoryOpts = dagger.ContainerWithDirectoryOpts
 
@@ -695,6 +698,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
 			return (*NodeAnalyzer).IsPackage(&parent)
+		case "Is":
+			var parent NodeAnalyzer
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var scriptName string
+			if inputArgs["scriptName"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["scriptName"]), &scriptName)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg scriptName", err))
+				}
+			}
+			return (*NodeAnalyzer).Is(&parent, scriptName)
 		case "GetEngineVersion":
 			var parent NodeAnalyzer
 			err = json.Unmarshal(parentJSON, &parent)
@@ -716,6 +733,13 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
 			return (*NodeAnalyzer).GetName(&parent)
+		case "GetScriptNames":
+			var parent NodeAnalyzer
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*NodeAnalyzer).GetScriptNames(&parent)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -763,6 +787,10 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("IsPackage",
 							dag.TypeDef().WithKind(BooleanKind))).
 					WithFunction(
+						dag.Function("Is",
+							dag.TypeDef().WithKind(BooleanKind)).
+							WithArg("scriptName", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define if a script is present or not in the package.json"})).
+					WithFunction(
 						dag.Function("GetEngineVersion",
 							dag.TypeDef().WithKind(StringKind))).
 					WithFunction(
@@ -771,6 +799,9 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("GetName",
 							dag.TypeDef().WithKind(StringKind))).
+					WithFunction(
+						dag.Function("GetScriptNames",
+							dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)))).
 					WithField("Matches", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))).
 					WithField("PkgJsonRep", dag.TypeDef().WithKind(StringKind))).
 			WithObject(

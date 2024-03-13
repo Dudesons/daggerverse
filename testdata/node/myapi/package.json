@@ -1,6 +1,7 @@
 {
-  "name": "testdata-fastify",
+  "name": "myapi",
   "type": "module",
+  "version": "1.2.0",
   "private": true,
   "license": "UNLICENSED",
   "main": "index.js",
