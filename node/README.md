@@ -22,6 +22,7 @@ A Nodejs module
 The module expects to find some information in the `package.json`:
  * Fields: 
    * `.name`
+   * `.version`
    * `.engines.node`
  * Scripts:
    * `test` (required if test are find): expect a command to run tests

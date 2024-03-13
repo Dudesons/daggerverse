@@ -12,18 +12,6 @@ import (
 // Build a production image and push to one or more registries
 func (n *Node) OciBuild(
 	ctx context.Context,
-	// Define folder names to map in the working directory, these names match 'folder-artifacts'
-	// +optional
-	folderArtifactNames []string,
-	// Define folders to map in the working directory, these folders match 'folder-artifact-names'
-	// +optional
-	folderArtifacts []*Directory,
-	// Define files to mount in the working directory, these names match 'file-artifact-names'
-	// +optional
-	fileArtifactNames []string,
-	// Define file names to map in the working directory, these names match 'file-artifacts'
-	// +optional
-	fileArtifacts []*File,
 	// Define path to fo file to fetch from the build container
 	// +optional
 	fileContainerArtifacts []string,
@@ -48,11 +36,16 @@ func (n *Node) OciBuild(
 	var eg errgroup.Group
 	var fullyQualifiedImageNames []string
 
+	result := make(chan string)
+
 	if n.DistName == "" {
 		n.DistName = "dist"
 	}
 
-	result := make(chan string)
+	if isTtl {
+		registries = []string{ttlRegistry}
+	}
+
 	productionBuild := &Node{
 		PipelineID:      n.PipelineID,
 		PkgMgr:          n.PkgMgr,
@@ -70,21 +63,19 @@ func (n *Node) OciBuild(
 	productionBuild = productionBuild.
 		WithVersion(baseImageRefParts[0], baseImageRefParts[1], false)
 
-	ctrDirArtifacts := []string{
-		n.DistName,
-	}
+	ctrDirArtifacts := append(
+		[]string{
+			n.DistName,
+		},
+		directoryContainerArtifacts...,
+	)
 
-	ctrFileArtifacts := []string{
-		"package.json",
-	}
-
-	if directoryContainerArtifacts != nil && len(directoryContainerArtifacts) > 0 {
-		ctrDirArtifacts = append(ctrDirArtifacts, directoryContainerArtifacts...)
-	}
-
-	if fileContainerArtifacts != nil && len(fileContainerArtifacts) > 0 {
-		ctrFileArtifacts = append(fileContainerArtifacts, fileContainerArtifacts...)
-	}
+	ctrFileArtifacts := append(
+		[]string{
+			"package.json",
+		},
+		fileContainerArtifacts...,
+	)
 
 	if n.NpmrcToken != nil {
 		ctrFileArtifacts = append(ctrFileArtifacts, ".npmrc")
@@ -104,38 +95,13 @@ func (n *Node) OciBuild(
 		ctrFileArtifacts = append(ctrFileArtifacts, "package-lock.json")
 	}
 
-	if len(folderArtifacts) != len(folderArtifactNames) {
-		return nil, fmt.Errorf("error mapping in folder artifacts")
-	}
-
-	if len(fileArtifacts) != len(fileArtifactNames) {
-		return nil, fmt.Errorf("error in mapping in file artifacts")
-	}
-
 	productionBuild.Ctr = productionBuild.Ctr.WithWorkdir(workdir)
-
-	productionBuild = productionBuild.
-		SetupSystem(nil).
-		Production().
-		WithPackageManager(n.PkgMgr, true)
-
-	for i, name := range folderArtifactNames {
-		productionBuild.Ctr = productionBuild.
-			Ctr.
-			WithDirectory(workdir+"/"+name, folderArtifacts[i])
-	}
 
 	for _, name := range ctrDirArtifacts {
 		path := workdir + "/" + name
 		productionBuild.Ctr = productionBuild.
 			Ctr.
 			WithDirectory(path, n.Ctr.Directory(path))
-	}
-
-	for i, name := range fileArtifactNames {
-		productionBuild.Ctr = productionBuild.
-			Ctr.
-			WithFile(workdir+"/"+name, fileArtifacts[i])
 	}
 
 	for _, name := range ctrFileArtifacts {
@@ -145,11 +111,11 @@ func (n *Node) OciBuild(
 			WithFile(path, n.Ctr.File(path))
 	}
 
-	productionBuild = productionBuild.Install()
-
-	if isTtl {
-		registries = []string{ttlRegistry}
-	}
+	productionBuild = productionBuild.
+		SetupSystem(nil).
+		Production().
+		WithPackageManager(n.PkgMgr, true).
+		Install()
 
 	for _, registry := range registries {
 		eg.Go(func() error {

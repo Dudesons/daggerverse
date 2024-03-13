@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"strconv"
 )
@@ -80,8 +81,6 @@ func (n *Node) WithNpm(
 	disableCache bool,
 ) *Node {
 	n.PkgMgr = "npm"
-	n.Ctr = n.Ctr.
-		WithEntrypoint([]string{"npm"})
 
 	if !disableCache {
 		n.Ctr = n.
@@ -99,8 +98,6 @@ func (n *Node) WithYarn(
 	disableCache bool,
 ) *Node {
 	n.PkgMgr = "yarn"
-	n.Ctr = n.Ctr.
-		WithEntrypoint([]string{"yarn"})
 
 	if !disableCache {
 		n.Ctr = n.
@@ -136,6 +133,78 @@ func (n *Node) WithSource(
 	return n
 }
 
+// Return the Node container with an additional file in the working dir
+func (n *Node) WithFile(
+	// The file to use
+	file *File,
+	// The path where the file should be mounted
+	path string,
+	// Indicate if the file is mounted or persisted in the container
+	// +optional
+	persisted bool,
+) *Node {
+	if persisted {
+		n.Ctr = n.
+			Ctr.
+			WithFile(workdir, file)
+	} else {
+		n.Ctr = n.
+			Ctr.
+			WithMountedFile(workdir, file)
+	}
+
+	return n
+}
+
+// Return the Node container with an additional directory in the working dir
+func (n *Node) WithDirectory(
+	// The directory to use
+	dir *Directory,
+	// The path where the directory should be mounted
+	path string,
+	// Indicate if the directory is mounted or persisted in the container
+	// +optional
+	persisted bool,
+) *Node {
+	if persisted {
+		n.Ctr = n.
+			Ctr.
+			WithDirectory(workdir, dir)
+	} else {
+		n.Ctr = n.
+			Ctr.
+			WithMountedDirectory(workdir, dir)
+	}
+
+	return n
+}
+
+// Return the Node container with an additional cache volume in the working dir
+func (n *Node) WithCache(
+	// The cache volume to use
+	cache *CacheVolume,
+	// The path where the cache volume should be mounted
+	path string,
+	// Indicate if the cache volume is mounted or persisted in the container
+	// +optional
+	persisted bool,
+) *Node {
+	if persisted {
+		tmpPath := "/tmp/" + uuid.New().String() + path
+		n.Ctr = n.
+			Ctr.
+			WithMountedCache(tmpPath, cache).
+			WithExec([]string{"cp", "r", tmpPath, workdir + "/" + path})
+
+	} else {
+		n.Ctr = n.
+			Ctr.
+			WithMountedCache(workdir+"/"+path, cache)
+	}
+
+	return n
+}
+
 // Return a node container with the 'NODE_ENV' set to production
 func (n *Node) Production() *Node {
 	n.IsProduction = true
@@ -153,13 +222,13 @@ func (n *Node) Run(
 ) *Node {
 	n.Ctr = n.
 		Ctr.
-		WithExec(append([]string{"run"}, command...))
+		WithExec(append([]string{n.PkgMgr, "run"}, command...))
 	return n
 }
 
 // Install node modules
 func (n *Node) Install() *Node {
-	n.Ctr = n.Ctr.WithExec([]string{"install"})
+	n.Ctr = n.Ctr.WithExec([]string{n.PkgMgr, "install"})
 	return n
 }
 
@@ -169,90 +238,16 @@ func (n *Node) Lint() *Node {
 }
 
 // Execute test command
-func (n *Node) Test(
-	// Define folder names to mount for testing, these names match 'folder-artifacts'
-	// +optional
-	folderArtifactNames []string,
-	// Define folders to map in the working directory for testing, these folders match 'folder-artifact-names'
-	// +optional
-	folderArtifacts []*Directory,
-	// Define files to mount in the working directory for testing, these names match 'file-artifact-names'
-	// +optional
-	fileArtifactNames []string,
-	// Define file names to map in the working directory for testing, these names match 'file-artifacts'
-	// +optional
-	fileArtifacts []*File,
-	// Define artifact names to mount for testing, these names match 'cache-artifacts'
-	// +optional
-	cacheArtifactNames []string,
-	// Define artifact to map in the working directory for testing, these folders match 'cache-artifact-names'
-	// +optional
-	cacheArtifacts []string,
-) *Node {
-	for i, name := range folderArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedDirectory(workdir+"/"+name, folderArtifacts[i])
-	}
-
-	for i, name := range fileArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedFile(workdir+"/"+name, fileArtifacts[i])
-	}
-
-	for i, name := range cacheArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedCache(workdir+"/"+name, dag.CacheVolume(cacheArtifacts[i]))
-	}
-
+func (n *Node) Test() *Node {
 	return n.Run([]string{"test"})
 }
 
 // Execute test commands in parallel
 func (n *Node) ParallelTest(
 	ctx context.Context,
-	// Define folder names to mount for testing, these names match 'folder-artifacts'
-	// +optional
-	folderArtifactNames []string,
-	// Define folders to map in the working directory for testing, these folders match 'folder-artifact-names'
-	// +optional
-	folderArtifacts []*Directory,
-	// Define files to mount in the working directoryf or testing, these names match 'file-artifact-names'
-	// +optional
-	fileArtifactNames []string,
-	// Define file names to map in the working directory or testing, these names match 'file-artifacts'
-	// +optional
-	fileArtifacts []*File,
-	// Define artifact names to mount for testing or testing, these names match 'cache-artifacts'
-	// +optional
-	cacheArtifactNames []string,
-	// Define artifact to map in the working directory or testing, these folders match 'cache-artifact-names'
-	// +optional
-	cacheArtifacts []string,
-	//Define all command to run
 	cmds [][]string,
 ) error {
 	var eg errgroup.Group
-
-	for i, name := range folderArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedDirectory(workdir+"/"+name, folderArtifacts[i])
-	}
-
-	for i, name := range fileArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedFile(workdir+"/"+name, fileArtifacts[i])
-	}
-
-	for i, name := range cacheArtifactNames {
-		n.Ctr = n.
-			Ctr.
-			WithMountedCache(workdir+"/"+name, dag.CacheVolume(cacheArtifacts[i]))
-	}
 
 	for _, cmd := range cmds {
 		eg.Go(func() error {
@@ -268,8 +263,6 @@ func (n *Node) ParallelTest(
 func (n *Node) Clean() *Node {
 	return n.Run([]string{"clean"})
 }
-
-// Todo(think to a method to execute multiple test command, eg: [][]string)
 
 // Execute the build command
 func (n *Node) Build() *Node {
@@ -288,7 +281,7 @@ func (n *Node) Publish(
 	// +optional
 	dryRun bool,
 ) *Node {
-	publishCmd := []string{"publish"}
+	publishCmd := []string{n.PkgMgr, "publish"}
 
 	if access != "" {
 		publishCmd = append(publishCmd, []string{"--access", access}...)
@@ -303,5 +296,23 @@ func (n *Node) Publish(
 	}
 
 	n.Ctr = n.Ctr.WithExec(publishCmd)
+	return n
+}
+
+// Bump the package version
+func (n *Node) BumpVersion(
+	// Define the bump version strategy (major | minor | patch | premajor | preminor | prepatch | prerelease)
+	strategy string,
+	// The message will use it as a commit message when creating a version commit. If the message config contains %s then that will be replaced with the resulting version number
+	// +optional
+	message string,
+) *Node {
+	versionCmd := []string{n.PkgMgr, "version", strategy}
+
+	if message != "" {
+		versionCmd = append(versionCmd, []string{"-m", message}...)
+	}
+
+	n.Ctr = n.Ctr.WithExec(versionCmd)
 	return n
 }

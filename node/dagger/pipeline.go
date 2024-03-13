@@ -28,36 +28,12 @@ func (n *Node) Pipeline(
 	// Indicate if the package is publishing as development version
 	// +optional
 	packageDevTag string,
-	// Define folder names to mount for testing, these names match 'folder-artifacts'
+	// Define path to file to fetch from the build container
 	// +optional
-	testFolderArtifactNames []string,
-	// Define folders to map in the working directory for testing, these folders match 'test-folder-artifact-names'
+	fileContainerArtifacts []string,
+	// Define path to directories to fetch from the build container
 	// +optional
-	testFolderArtifacts []*Directory,
-	// Define files to mount in the working directoryf or testing, these names match 'test-file-artifact-names'
-	// +optional
-	testFileArtifactNames []string,
-	// Define file names to map in the working directory or testing, these names match 'test-file-artifacts'
-	// +optional
-	testFileArtifacts []*File,
-	// Define artifact names to mount for testing or testing, these names match 'test-cache-artifacts'
-	// +optional
-	testCacheArtifactNames []string,
-	// Define artifact to map in the working directory or testing, these folders match 'test-cache-artifact-names'
-	// +optional
-	testCacheArtifacts []string,
-	// Define folder names to map in the working directory, these names match 'folder-artifacts'
-	// +optional
-	ociFolderArtifactNames []string,
-	// Define folders to map in the working directory, these folders match 'folder-artifact-names'
-	// +optional
-	ociFolderArtifacts []*Directory,
-	// Define files to mount in the working directory, these names match 'file-artifact-names'
-	// +optional
-	ociFileArtifactNames []string,
-	// Define file names to map in the working directory, these names match 'file-artifacts'
-	// +optional
-	ociFileArtifacts []*File,
+	directoryContainerArtifacts []string,
 	// Define registries where to push the image
 	// +optional
 	ociRegistries []string,
@@ -81,16 +57,10 @@ func (n *Node) Pipeline(
 	}
 
 	if n.DetectTest {
-		pipeline = pipeline.Test(
-			testFolderArtifactNames,
-			testFolderArtifacts,
-			testFileArtifactNames,
-			testFileArtifacts,
-			testCacheArtifactNames,
-			testCacheArtifacts,
-		)
+		pipeline = pipeline.Test()
 	}
 
+	// TODO(Move it at the end)
 	for _, hook := range postHooks {
 		pipeline = pipeline.Run(hook)
 	}
@@ -107,12 +77,8 @@ func (n *Node) Pipeline(
 		refs, err := pipeline.
 			OciBuild(
 				ctx,
-				ociFolderArtifactNames,
-				ociFolderArtifacts,
-				ociFileArtifactNames,
-				ociFileArtifacts,
-				nil,
-				nil,
+				fileContainerArtifacts,
+				directoryContainerArtifacts,
 				ociRegistries,
 				dryRun,
 				ttlRegistry,
@@ -121,5 +87,6 @@ func (n *Node) Pipeline(
 
 		return strings.Join(refs, "\n"), err
 	}
+
 	return pipeline.Do(ctx)
 }

@@ -178,6 +178,9 @@ type ContainerPublishOpts = dagger.ContainerPublishOpts
 // ContainerTerminalOpts contains options for Container.Terminal
 type ContainerTerminalOpts = dagger.ContainerTerminalOpts
 
+// ContainerWithDefaultTerminalCmdOpts contains options for Container.WithDefaultTerminalCmd
+type ContainerWithDefaultTerminalCmdOpts = dagger.ContainerWithDefaultTerminalCmdOpts
+
 // ContainerWithDirectoryOpts contains options for Container.WithDirectory
 type ContainerWithDirectoryOpts = dagger.ContainerWithDirectoryOpts
 
@@ -730,83 +733,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
 			return (*Node).Do(&parent, ctx)
-		case "OciBuild":
-			var parent Node
-			err = json.Unmarshal(parentJSON, &parent)
-			if err != nil {
-				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
-			}
-			var folderArtifactNames []string
-			if inputArgs["folderArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifactNames"]), &folderArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifactNames", err))
-				}
-			}
-			var folderArtifacts []*Directory
-			if inputArgs["folderArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifacts"]), &folderArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifacts", err))
-				}
-			}
-			var fileArtifactNames []string
-			if inputArgs["fileArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifactNames"]), &fileArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifactNames", err))
-				}
-			}
-			var fileArtifacts []*File
-			if inputArgs["fileArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifacts"]), &fileArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifacts", err))
-				}
-			}
-			var fileContainerArtifacts []string
-			if inputArgs["fileContainerArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileContainerArtifacts"]), &fileContainerArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileContainerArtifacts", err))
-				}
-			}
-			var directoryContainerArtifacts []string
-			if inputArgs["directoryContainerArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["directoryContainerArtifacts"]), &directoryContainerArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg directoryContainerArtifacts", err))
-				}
-			}
-			var registries []string
-			if inputArgs["registries"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["registries"]), &registries)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg registries", err))
-				}
-			}
-			var isTtl bool
-			if inputArgs["isTtl"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["isTtl"]), &isTtl)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg isTtl", err))
-				}
-			}
-			var ttlRegistry string
-			if inputArgs["ttlRegistry"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ttlRegistry"]), &ttlRegistry)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ttlRegistry", err))
-				}
-			}
-			var ttl string
-			if inputArgs["ttl"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ttl"]), &ttl)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ttl", err))
-				}
-			}
-			return (*Node).OciBuild(&parent, ctx, folderArtifactNames, folderArtifacts, fileArtifactNames, fileArtifacts, fileContainerArtifacts, directoryContainerArtifacts, registries, isTtl, ttlRegistry, ttl)
 		case "WithVersion":
 			var parent Node
 			err = json.Unmarshal(parentJSON, &parent)
@@ -940,6 +866,90 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return (*Node).WithSource(&parent, src, persisted), nil
+		case "WithFile":
+			var parent Node
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var file *File
+			if inputArgs["file"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["file"]), &file)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg file", err))
+				}
+			}
+			var path string
+			if inputArgs["path"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["path"]), &path)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg path", err))
+				}
+			}
+			var persisted bool
+			if inputArgs["persisted"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["persisted"]), &persisted)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg persisted", err))
+				}
+			}
+			return (*Node).WithFile(&parent, file, path, persisted), nil
+		case "WithDirectory":
+			var parent Node
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var dir *Directory
+			if inputArgs["dir"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["dir"]), &dir)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg dir", err))
+				}
+			}
+			var path string
+			if inputArgs["path"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["path"]), &path)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg path", err))
+				}
+			}
+			var persisted bool
+			if inputArgs["persisted"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["persisted"]), &persisted)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg persisted", err))
+				}
+			}
+			return (*Node).WithDirectory(&parent, dir, path, persisted), nil
+		case "WithCache":
+			var parent Node
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var cache *CacheVolume
+			if inputArgs["cache"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["cache"]), &cache)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cache", err))
+				}
+			}
+			var path string
+			if inputArgs["path"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["path"]), &path)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg path", err))
+				}
+			}
+			var persisted bool
+			if inputArgs["persisted"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["persisted"]), &persisted)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg persisted", err))
+				}
+			}
+			return (*Node).WithCache(&parent, cache, path, persisted), nil
 		case "Production":
 			var parent Node
 			err = json.Unmarshal(parentJSON, &parent)
@@ -981,96 +991,12 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var folderArtifactNames []string
-			if inputArgs["folderArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifactNames"]), &folderArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifactNames", err))
-				}
-			}
-			var folderArtifacts []*Directory
-			if inputArgs["folderArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifacts"]), &folderArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifacts", err))
-				}
-			}
-			var fileArtifactNames []string
-			if inputArgs["fileArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifactNames"]), &fileArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifactNames", err))
-				}
-			}
-			var fileArtifacts []*File
-			if inputArgs["fileArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifacts"]), &fileArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifacts", err))
-				}
-			}
-			var cacheArtifactNames []string
-			if inputArgs["cacheArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["cacheArtifactNames"]), &cacheArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheArtifactNames", err))
-				}
-			}
-			var cacheArtifacts []string
-			if inputArgs["cacheArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["cacheArtifacts"]), &cacheArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheArtifacts", err))
-				}
-			}
-			return (*Node).Test(&parent, folderArtifactNames, folderArtifacts, fileArtifactNames, fileArtifacts, cacheArtifactNames, cacheArtifacts), nil
+			return (*Node).Test(&parent), nil
 		case "ParallelTest":
 			var parent Node
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
-			}
-			var folderArtifactNames []string
-			if inputArgs["folderArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifactNames"]), &folderArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifactNames", err))
-				}
-			}
-			var folderArtifacts []*Directory
-			if inputArgs["folderArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["folderArtifacts"]), &folderArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg folderArtifacts", err))
-				}
-			}
-			var fileArtifactNames []string
-			if inputArgs["fileArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifactNames"]), &fileArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifactNames", err))
-				}
-			}
-			var fileArtifacts []*File
-			if inputArgs["fileArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["fileArtifacts"]), &fileArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileArtifacts", err))
-				}
-			}
-			var cacheArtifactNames []string
-			if inputArgs["cacheArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["cacheArtifactNames"]), &cacheArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheArtifactNames", err))
-				}
-			}
-			var cacheArtifacts []string
-			if inputArgs["cacheArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["cacheArtifacts"]), &cacheArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheArtifacts", err))
-				}
 			}
 			var cmds [][]string
 			if inputArgs["cmds"] != nil {
@@ -1079,7 +1005,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cmds", err))
 				}
 			}
-			return nil, (*Node).ParallelTest(&parent, ctx, folderArtifactNames, folderArtifacts, fileArtifactNames, fileArtifacts, cacheArtifactNames, cacheArtifacts, cmds)
+			return nil, (*Node).ParallelTest(&parent, ctx, cmds)
 		case "Clean":
 			var parent Node
 			err = json.Unmarshal(parentJSON, &parent)
@@ -1122,6 +1048,76 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return (*Node).Publish(&parent, access, devTag, dryRun), nil
+		case "BumpVersion":
+			var parent Node
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var strategy string
+			if inputArgs["strategy"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["strategy"]), &strategy)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg strategy", err))
+				}
+			}
+			var message string
+			if inputArgs["message"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["message"]), &message)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg message", err))
+				}
+			}
+			return (*Node).BumpVersion(&parent, strategy, message), nil
+		case "OciBuild":
+			var parent Node
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var fileContainerArtifacts []string
+			if inputArgs["fileContainerArtifacts"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["fileContainerArtifacts"]), &fileContainerArtifacts)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileContainerArtifacts", err))
+				}
+			}
+			var directoryContainerArtifacts []string
+			if inputArgs["directoryContainerArtifacts"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["directoryContainerArtifacts"]), &directoryContainerArtifacts)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg directoryContainerArtifacts", err))
+				}
+			}
+			var registries []string
+			if inputArgs["registries"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["registries"]), &registries)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg registries", err))
+				}
+			}
+			var isTtl bool
+			if inputArgs["isTtl"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["isTtl"]), &isTtl)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg isTtl", err))
+				}
+			}
+			var ttlRegistry string
+			if inputArgs["ttlRegistry"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["ttlRegistry"]), &ttlRegistry)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ttlRegistry", err))
+				}
+			}
+			var ttl string
+			if inputArgs["ttl"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["ttl"]), &ttl)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ttl", err))
+				}
+			}
+			return (*Node).OciBuild(&parent, ctx, fileContainerArtifacts, directoryContainerArtifacts, registries, isTtl, ttlRegistry, ttl)
 		case "WithAutoSetup":
 			var parent Node
 			err = json.Unmarshal(parentJSON, &parent)
@@ -1226,74 +1222,18 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg packageDevTag", err))
 				}
 			}
-			var testFolderArtifactNames []string
-			if inputArgs["testFolderArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testFolderArtifactNames"]), &testFolderArtifactNames)
+			var fileContainerArtifacts []string
+			if inputArgs["fileContainerArtifacts"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["fileContainerArtifacts"]), &fileContainerArtifacts)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testFolderArtifactNames", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg fileContainerArtifacts", err))
 				}
 			}
-			var testFolderArtifacts []*Directory
-			if inputArgs["testFolderArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testFolderArtifacts"]), &testFolderArtifacts)
+			var directoryContainerArtifacts []string
+			if inputArgs["directoryContainerArtifacts"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["directoryContainerArtifacts"]), &directoryContainerArtifacts)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testFolderArtifacts", err))
-				}
-			}
-			var testFileArtifactNames []string
-			if inputArgs["testFileArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testFileArtifactNames"]), &testFileArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testFileArtifactNames", err))
-				}
-			}
-			var testFileArtifacts []*File
-			if inputArgs["testFileArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testFileArtifacts"]), &testFileArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testFileArtifacts", err))
-				}
-			}
-			var testCacheArtifactNames []string
-			if inputArgs["testCacheArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testCacheArtifactNames"]), &testCacheArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testCacheArtifactNames", err))
-				}
-			}
-			var testCacheArtifacts []string
-			if inputArgs["testCacheArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testCacheArtifacts"]), &testCacheArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testCacheArtifacts", err))
-				}
-			}
-			var ociFolderArtifactNames []string
-			if inputArgs["ociFolderArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ociFolderArtifactNames"]), &ociFolderArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ociFolderArtifactNames", err))
-				}
-			}
-			var ociFolderArtifacts []*Directory
-			if inputArgs["ociFolderArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ociFolderArtifacts"]), &ociFolderArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ociFolderArtifacts", err))
-				}
-			}
-			var ociFileArtifactNames []string
-			if inputArgs["ociFileArtifactNames"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ociFileArtifactNames"]), &ociFileArtifactNames)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ociFileArtifactNames", err))
-				}
-			}
-			var ociFileArtifacts []*File
-			if inputArgs["ociFileArtifacts"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["ociFileArtifacts"]), &ociFileArtifacts)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ociFileArtifacts", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg directoryContainerArtifacts", err))
 				}
 			}
 			var ociRegistries []string
@@ -1317,7 +1257,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ttl", err))
 				}
 			}
-			return (*Node).Pipeline(&parent, ctx, preHooks, postHooks, isOci, dryRun, packageAccess, packageDevTag, testFolderArtifactNames, testFolderArtifacts, testFileArtifactNames, testFileArtifacts, testCacheArtifactNames, testCacheArtifacts, ociFolderArtifactNames, ociFolderArtifacts, ociFileArtifactNames, ociFileArtifacts, ociRegistries, ttlRegistry, ttl)
+			return (*Node).Pipeline(&parent, ctx, preHooks, postHooks, isOci, dryRun, packageAccess, packageDevTag, fileContainerArtifacts, directoryContainerArtifacts, ociRegistries, ttlRegistry, ttl)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -1353,20 +1293,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("Do",
 							dag.TypeDef().WithKind(StringKind)).
 							WithDescription("Execute all commands")).
-					WithFunction(
-						dag.Function("OciBuild",
-							dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))).
-							WithDescription("Build a production image and push to one or more registries").
-							WithArg("folderArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define folder names to map in the working directory, these names match 'folder-artifacts'"}).
-							WithArg("folderArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("Directory")).WithOptional(true), FunctionWithArgOpts{Description: "Define folders to map in the working directory, these folders match 'folder-artifact-names'"}).
-							WithArg("fileArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define files to mount in the working directory, these names match 'file-artifact-names'"}).
-							WithArg("fileArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("File")).WithOptional(true), FunctionWithArgOpts{Description: "Define file names to map in the working directory, these names match 'file-artifacts'"}).
-							WithArg("fileContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo file to fetch from the build container"}).
-							WithArg("directoryContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo directories to fetch from the build container"}).
-							WithArg("registries", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)), FunctionWithArgOpts{Description: "Define registries where to push the image"}).
-							WithArg("isTtl", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl registry to use"}).
-							WithArg("ttlRegistry", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl registry to use", DefaultValue: JSON("\"ttl.sh\"")}).
-							WithArg("ttl", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl in the ttl registry", DefaultValue: JSON("\"60m\"")})).
 					WithFunction(
 						dag.Function("WithVersion",
 							dag.TypeDef().WithObject("Node")).
@@ -1408,6 +1334,27 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("src", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "The source code"}).
 							WithArg("persisted", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the directory is mounted or persisted in the container"})).
 					WithFunction(
+						dag.Function("WithFile",
+							dag.TypeDef().WithObject("Node")).
+							WithDescription("Return the Node container with an additional file in the working dir").
+							WithArg("file", dag.TypeDef().WithObject("File"), FunctionWithArgOpts{Description: "The file to use"}).
+							WithArg("path", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The path where the file should be mounted"}).
+							WithArg("persisted", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the file is mounted or persisted in the container"})).
+					WithFunction(
+						dag.Function("WithDirectory",
+							dag.TypeDef().WithObject("Node")).
+							WithDescription("Return the Node container with an additional directory in the working dir").
+							WithArg("dir", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "The directory to use"}).
+							WithArg("path", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The path where the directory should be mounted"}).
+							WithArg("persisted", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the directory is mounted or persisted in the container"})).
+					WithFunction(
+						dag.Function("WithCache",
+							dag.TypeDef().WithObject("Node")).
+							WithDescription("Return the Node container with an additional cache volume in the working dir").
+							WithArg("cache", dag.TypeDef().WithObject("CacheVolume"), FunctionWithArgOpts{Description: "The cache volume to use"}).
+							WithArg("path", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The path where the cache volume should be mounted"}).
+							WithArg("persisted", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the cache volume is mounted or persisted in the container"})).
+					WithFunction(
 						dag.Function("Production",
 							dag.TypeDef().WithObject("Node")).
 							WithDescription("Return a node container with the 'NODE_ENV' set to production")).
@@ -1427,24 +1374,12 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("Test",
 							dag.TypeDef().WithObject("Node")).
-							WithDescription("Execute test command").
-							WithArg("folderArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define folder names to mount for testing, these names match 'folder-artifacts'"}).
-							WithArg("folderArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("Directory")).WithOptional(true), FunctionWithArgOpts{Description: "Define folders to map in the working directory for testing, these folders match 'folder-artifact-names'"}).
-							WithArg("fileArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define files to mount in the working directory for testing, these names match 'file-artifact-names'"}).
-							WithArg("fileArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("File")).WithOptional(true), FunctionWithArgOpts{Description: "Define file names to map in the working directory for testing, these names match 'file-artifacts'"}).
-							WithArg("cacheArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact names to mount for testing, these names match 'cache-artifacts'"}).
-							WithArg("cacheArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact to map in the working directory for testing, these folders match 'cache-artifact-names'"})).
+							WithDescription("Execute test command")).
 					WithFunction(
 						dag.Function("ParallelTest",
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithDescription("Execute test commands in parallel").
-							WithArg("folderArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define folder names to mount for testing, these names match 'folder-artifacts'"}).
-							WithArg("folderArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("Directory")).WithOptional(true), FunctionWithArgOpts{Description: "Define folders to map in the working directory for testing, these folders match 'folder-artifact-names'"}).
-							WithArg("fileArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define files to mount in the working directoryf or testing, these names match 'file-artifact-names'"}).
-							WithArg("fileArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("File")).WithOptional(true), FunctionWithArgOpts{Description: "Define file names to map in the working directory or testing, these names match 'file-artifacts'"}).
-							WithArg("cacheArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact names to mount for testing or testing, these names match 'cache-artifacts'"}).
-							WithArg("cacheArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact to map in the working directory or testing, these folders match 'cache-artifact-names'"}).
-							WithArg("cmds", dag.TypeDef().WithListOf(dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))), FunctionWithArgOpts{Description: "Define all command to run"})).
+							WithArg("cmds", dag.TypeDef().WithListOf(dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))))).
 					WithFunction(
 						dag.Function("Clean",
 							dag.TypeDef().WithObject("Node")).
@@ -1460,6 +1395,22 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("access", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define permission on the package in the registry"}).
 							WithArg("devTag", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the package is publishing as development version"}).
 							WithArg("dryRun", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate to dry run the publishing"})).
+					WithFunction(
+						dag.Function("BumpVersion",
+							dag.TypeDef().WithObject("Node")).
+							WithDescription("Bump the package version").
+							WithArg("strategy", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define the bump version strategy (major | minor | patch | premajor | preminor | prepatch | prerelease)"}).
+							WithArg("message", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "The message will use it as a commit message when creating a version commit. If the message config contains %s then that will be replaced with the resulting version number"})).
+					WithFunction(
+						dag.Function("OciBuild",
+							dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))).
+							WithDescription("Build a production image and push to one or more registries").
+							WithArg("fileContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo file to fetch from the build container"}).
+							WithArg("directoryContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo directories to fetch from the build container"}).
+							WithArg("registries", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)), FunctionWithArgOpts{Description: "Define registries where to push the image"}).
+							WithArg("isTtl", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl registry to use"}).
+							WithArg("ttlRegistry", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl registry to use", DefaultValue: JSON("\"ttl.sh\"")}).
+							WithArg("ttl", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl in the ttl registry", DefaultValue: JSON("\"60m\"")})).
 					WithFunction(
 						dag.Function("WithAutoSetup",
 							dag.TypeDef().WithObject("Node")).
@@ -1481,16 +1432,8 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("dryRun", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate to dry run the publishing", DefaultValue: JSON("\"false\"")}).
 							WithArg("packageAccess", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define permission on the package in the registry", DefaultValue: JSON("\"true\"")}).
 							WithArg("packageDevTag", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Indicate if the package is publishing as development version"}).
-							WithArg("testFolderArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define folder names to mount for testing, these names match 'folder-artifacts'"}).
-							WithArg("testFolderArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("Directory")).WithOptional(true), FunctionWithArgOpts{Description: "Define folders to map in the working directory for testing, these folders match 'test-folder-artifact-names'"}).
-							WithArg("testFileArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define files to mount in the working directoryf or testing, these names match 'test-file-artifact-names'"}).
-							WithArg("testFileArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("File")).WithOptional(true), FunctionWithArgOpts{Description: "Define file names to map in the working directory or testing, these names match 'test-file-artifacts'"}).
-							WithArg("testCacheArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact names to mount for testing or testing, these names match 'test-cache-artifacts'"}).
-							WithArg("testCacheArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define artifact to map in the working directory or testing, these folders match 'test-cache-artifact-names'"}).
-							WithArg("ociFolderArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define folder names to map in the working directory, these names match 'folder-artifacts'"}).
-							WithArg("ociFolderArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("Directory")).WithOptional(true), FunctionWithArgOpts{Description: "Define folders to map in the working directory, these folders match 'folder-artifact-names'"}).
-							WithArg("ociFileArtifactNames", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define files to mount in the working directory, these names match 'file-artifact-names'"}).
-							WithArg("ociFileArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithObject("File")).WithOptional(true), FunctionWithArgOpts{Description: "Define file names to map in the working directory, these names match 'file-artifacts'"}).
+							WithArg("fileContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo file to fetch from the build container"}).
+							WithArg("directoryContainerArtifacts", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define path to fo directories to fetch from the build container"}).
 							WithArg("ociRegistries", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind)).WithOptional(true), FunctionWithArgOpts{Description: "Define registries where to push the image"}).
 							WithArg("ttlRegistry", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl registry to use", DefaultValue: JSON("\"ttl.sh\"")}).
 							WithArg("ttl", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the ttl in the ttl registry", DefaultValue: JSON("\"60m\"")}))), nil
