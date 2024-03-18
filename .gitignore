@@ -28,3 +28,6 @@ dist/
 # CI folders
 **/node_modules/
 demo/
+.terraform
+.terragrunt-cache
+.terraform.lock.hcl
