@@ -1,0 +1,4 @@
+:rocket: Drift detection run on `{{ .RootStacksPath }}` :rocket:
+    :clock1: Start time: `{{ .StartTime }}` - End time: `{{ .Endtime }}`
+    :mega: Number of stacks: `{{ .StackLen }}`
+    {{ if gt .DriftLen 0 }}:rotating_light:{{ else }}:tada:{{ end }} Number of Drift: `{{ .DriftLen }}`
