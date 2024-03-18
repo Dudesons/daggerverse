@@ -1,0 +1,12 @@
+{
+  "name": "terrabox",
+  "sdk": "go",
+  "dependencies": [
+    {
+      "name": "utils",
+      "source": "../utils"
+    }
+  ],
+  "source": "dagger",
+  "engineVersion": "v0.10.2"
+}
