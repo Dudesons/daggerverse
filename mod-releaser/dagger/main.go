@@ -14,12 +14,9 @@ import (
 func New(
 	// A git repository where the release process will be applied
 	gitRepo *Directory,
-	//
+	// The module name to publish
 	component string,
-	//
-	// +optional
-	// +default="main"
-	branch string,
+
 ) *ModReleaser {
 	return &ModReleaser{
 		Component: component,
@@ -28,8 +25,7 @@ func New(
 			From("alpine:latest").
 			WithExec([]string{"apk", "add", "--no-cache", "git"}).
 			WithDirectory("/opt/repo/", gitRepo).
-			WithWorkdir("/opt/repo/").
-			WithExec([]string{"git", "checkout", branch}),
+			WithWorkdir("/opt/repo/"),
 	}
 }
 
@@ -64,16 +60,49 @@ func (m *ModReleaser) ListTags(ctx context.Context) (*ModReleaser, error) {
 	return m, nil
 }
 
-func (m *ModReleaser) Major() (*ModReleaser, error) {
-	return m.bumpVersion(true, false, false)
+func (m *ModReleaser) WithGitConfig(cfg *File) *ModReleaser {
+	return m
 }
 
-func (m *ModReleaser) Minor() (*ModReleaser, error) {
-	return m.bumpVersion(false, true, false)
+func (m *ModReleaser) WithGitConfigEmail(email string) *ModReleaser {
+	return m
 }
 
-func (m *ModReleaser) Patch() (*ModReleaser, error) {
-	return m.bumpVersion(false, false, true)
+func (m *ModReleaser) WithGitConfigName(name string) *ModReleaser {
+	return m
+}
+
+func (m *ModReleaser) WithBranch(
+	// Define the branch fro where to publish
+	// +optional
+	// +default="main"
+	branch string,
+) *ModReleaser {
+	return m.WithContainer(m.Ctr.WithExec([]string{"git", "checkout", branch}))
+}
+
+func (m *ModReleaser) Major(
+	// Define a custom message for the git tag otherwise it will be the default from the function
+	// +optional
+	msg string,
+) (*ModReleaser, error) {
+	return m.bumpVersion(true, false, false, msg)
+}
+
+func (m *ModReleaser) Minor(
+	// Define a custom message for the git tag otherwise it will be the default from the function
+	// +optional
+	msg string,
+) (*ModReleaser, error) {
+	return m.bumpVersion(false, true, false, msg)
+}
+
+func (m *ModReleaser) Patch(
+	// Define a custom message for the git tag otherwise it will be the default from the function
+	// +optional
+	msg string,
+) (*ModReleaser, error) {
+	return m.bumpVersion(false, false, true, msg)
 }
 
 func (m *ModReleaser) Publish() (*ModReleaser, error) {
@@ -88,7 +117,7 @@ func (m *ModReleaser) WithContainer(ctr *Container) *ModReleaser {
 	return m
 }
 
-func (m *ModReleaser) bumpVersion(major, minor, patch bool) (*ModReleaser, error) {
+func (m *ModReleaser) bumpVersion(major, minor, patch bool, customMsg string) (*ModReleaser, error) {
 	var msg string
 	var firstRelease bool
 	prefixTag := m.Component + "/v"
@@ -117,6 +146,10 @@ func (m *ModReleaser) bumpVersion(major, minor, patch bool) (*ModReleaser, error
 
 		m.Tag = prefixTag + fmt.Sprintf("%d.%d.%d", verMajor, verMinor, verPatch)
 		msg = "New release " + m.Tag
+	}
+
+	if customMsg != "" {
+		msg = customMsg
 	}
 
 	return m.WithContainer(m.Ctr.WithExec([]string{"git", "tag", "-a", m.Tag, "-m", msg})), nil

@@ -505,16 +505,34 @@ func convertSlice[I any, O any](in []I, f func(I) O) []O {
 }
 
 func (r ModReleaser) MarshalJSON() ([]byte, error) {
-	var concrete struct{}
+	var concrete struct {
+		Tags      []string
+		Tag       string
+		Ctr       *Container
+		Component string
+	}
+	concrete.Tags = r.Tags
+	concrete.Tag = r.Tag
+	concrete.Ctr = r.Ctr
+	concrete.Component = r.Component
 	return json.Marshal(&concrete)
 }
 
 func (r *ModReleaser) UnmarshalJSON(bs []byte) error {
-	var concrete struct{}
+	var concrete struct {
+		Tags      []string
+		Tag       string
+		Ctr       *Container
+		Component string
+	}
 	err := json.Unmarshal(bs, &concrete)
 	if err != nil {
 		return err
 	}
+	r.Tags = concrete.Tags
+	r.Tag = concrete.Tag
+	r.Ctr = concrete.Ctr
+	r.Component = concrete.Component
 	return nil
 }
 
@@ -579,60 +597,138 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 	switch parentName {
 	case "ModReleaser":
 		switch fnName {
-		case "ContainerEcho":
+		case "ListTags":
 			var parent ModReleaser
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var stringArg string
-			if inputArgs["stringArg"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["stringArg"]), &stringArg)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg stringArg", err))
-				}
-			}
-			return (*ModReleaser).ContainerEcho(&parent, stringArg), nil
-		case "GrepDir":
+			return (*ModReleaser).ListTags(&parent, ctx)
+		case "WithBranch":
 			var parent ModReleaser
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var directoryArg *Directory
-			if inputArgs["directoryArg"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["directoryArg"]), &directoryArg)
+			var branch string
+			if inputArgs["branch"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["branch"]), &branch)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg directoryArg", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg branch", err))
 				}
 			}
-			var pattern string
-			if inputArgs["pattern"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["pattern"]), &pattern)
+			return (*ModReleaser).WithBranch(&parent, branch), nil
+		case "Major":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*ModReleaser).Major(&parent)
+		case "Minor":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*ModReleaser).Minor(&parent)
+		case "Patch":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*ModReleaser).Patch(&parent)
+		case "Publish":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*ModReleaser).Publish(&parent)
+		case "WithContainer":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var ctr *Container
+			if inputArgs["ctr"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["ctr"]), &ctr)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg pattern", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg ctr", err))
 				}
 			}
-			return (*ModReleaser).GrepDir(&parent, ctx, directoryArg, pattern)
+			return (*ModReleaser).WithContainer(&parent, ctr), nil
+		case "Shell":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*ModReleaser).Shell(&parent), nil
+		case "":
+			var parent ModReleaser
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var gitRepo *Directory
+			if inputArgs["gitRepo"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["gitRepo"]), &gitRepo)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg gitRepo", err))
+				}
+			}
+			var component string
+			if inputArgs["component"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["component"]), &component)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg component", err))
+				}
+			}
+			return New(gitRepo, component), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
 	case "":
 		return dag.Module().
-			WithDescription("A generated module for ModReleaser functions\n\nThis module has been generated via dagger init and serves as a reference to\nbasic module structure as you get started with Dagger.\n\nTwo functions have been pre-created. You can modify, delete, or add to them,\nas needed. They demonstrate usage of arguments and return types using simple\necho and grep commands. The functions can be called from the dagger CLI or\nfrom one of the SDKs.\n\nThe first line in this comment block is a short description line and the\nrest is a long description with more detail on the module's purpose or usage,\nif appropriate. All modules should have a short description.\n").
+			WithDescription("A module for handling module release in daggerverse\n").
 			WithObject(
 				dag.TypeDef().WithObject("ModReleaser").
 					WithFunction(
-						dag.Function("ContainerEcho",
-							dag.TypeDef().WithObject("Container")).
-							WithDescription("Returns a container that echoes whatever string argument is provided").
-							WithArg("stringArg", dag.TypeDef().WithKind(StringKind))).
+						dag.Function("ListTags",
+							dag.TypeDef().WithObject("ModReleaser"))).
 					WithFunction(
-						dag.Function("GrepDir",
-							dag.TypeDef().WithKind(StringKind)).
-							WithDescription("Returns lines that match a pattern in the files of the provided Directory").
-							WithArg("directoryArg", dag.TypeDef().WithObject("Directory")).
-							WithArg("pattern", dag.TypeDef().WithKind(StringKind)))), nil
+						dag.Function("WithBranch",
+							dag.TypeDef().WithObject("ModReleaser")).
+							WithArg("branch", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define the branch fro where to publish", DefaultValue: JSON("\"main\"")})).
+					WithFunction(
+						dag.Function("Major",
+							dag.TypeDef().WithObject("ModReleaser"))).
+					WithFunction(
+						dag.Function("Minor",
+							dag.TypeDef().WithObject("ModReleaser"))).
+					WithFunction(
+						dag.Function("Patch",
+							dag.TypeDef().WithObject("ModReleaser"))).
+					WithFunction(
+						dag.Function("Publish",
+							dag.TypeDef().WithObject("ModReleaser"))).
+					WithFunction(
+						dag.Function("WithContainer",
+							dag.TypeDef().WithObject("ModReleaser")).
+							WithArg("ctr", dag.TypeDef().WithObject("Container"))).
+					WithFunction(
+						dag.Function("Shell",
+							dag.TypeDef().WithObject("Terminal"))).
+					WithField("Tags", dag.TypeDef().WithListOf(dag.TypeDef().WithKind(StringKind))).
+					WithField("Tag", dag.TypeDef().WithKind(StringKind)).
+					WithConstructor(
+						dag.Function("New",
+							dag.TypeDef().WithObject("ModReleaser")).
+							WithArg("gitRepo", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "A git repository where the release process will be applied"}).
+							WithArg("component", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The module name to publish"}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}
