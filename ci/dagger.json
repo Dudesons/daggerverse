@@ -11,6 +11,10 @@
       "source": "../node"
     },
     {
+      "name": "terrabox",
+      "source": "../terrabox"
+    },
+    {
       "name": "yq",
       "source": "../yq"
     }

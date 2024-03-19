@@ -4,6 +4,7 @@ import (
 	"strconv"
 )
 
+// Run a plan on a specific stack
 func (t *Tf) Plan(
 	// Define the path where to execute the command
 	workDir string,
@@ -31,6 +32,7 @@ func (t *Tf) Plan(
 	return t.WithContainer(t.run(workDir, cmd))
 }
 
+// Run an apply on a specific stack
 func (t *Tf) Apply(
 	// Define the path where to execute the command
 	workDir string,
@@ -50,24 +52,29 @@ func (t *Tf) Apply(
 	return t.WithContainer(t.run(workDir, cmd))
 }
 
+// Format the code
 func (t *Tf) Format(workDir string, check bool) *Tf {
 	checkOptVal := strconv.FormatBool(check)
 	if t.Bin == "terragrunt" {
-		t = t.WithContainer(
+		return t.WithContainer(
 			t.run(
 				workDir,
 				[]string{"hclfmt", "--terragrunt-check=" + checkOptVal},
-			),
+			).WithExec([]string{
+				"terraform",
+				"fmt",
+				"-recursive",
+				"-check=" + checkOptVal,
+			}),
 		)
 	}
 
-	// TODO(Find a better way to handle that in particular if it's opentofu)
 	return t.WithContainer(
 		t.
 			Ctr.
 			WithWorkdir(workDir).
 			WithExec([]string{
-				"terraform",
+				t.Bin,
 				"fmt",
 				"-recursive",
 				"-check=" + checkOptVal,
@@ -75,6 +82,7 @@ func (t *Tf) Format(workDir string, check bool) *Tf {
 	)
 }
 
+// Return the output of a specific stack
 func (t *Tf) Output(workDir string, isJson bool) *Tf {
 	cmd := []string{"output"}
 
@@ -85,10 +93,12 @@ func (t *Tf) Output(workDir string, isJson bool) *Tf {
 	return t.WithContainer(t.run(workDir, cmd))
 }
 
+// Execute the run-all command (only available for terragrunt)
 func (t *Tf) RunAll(workDir string, cmd string) *Tf {
 	return t.WithContainer(t.run(workDir, []string{"run-all", cmd}))
 }
 
+// expose the module catalog (only available for terragrunt)
 func (t *Tf) Catalog() *Terminal {
 	return t.Ctr.WithDefaultTerminalCmd([]string{t.Bin, "catalog"}).Terminal()
 }

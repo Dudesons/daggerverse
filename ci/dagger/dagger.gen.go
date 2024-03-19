@@ -123,6 +123,12 @@ type SocketID = dagger.SocketID
 // The `TerminalID` scalar type represents an identifier for an object of type Terminal.
 type TerminalID = dagger.TerminalID
 
+// The `TerraboxID` scalar type represents an identifier for an object of type Terrabox.
+type TerraboxID = dagger.TerraboxID
+
+// The `TerraboxTfID` scalar type represents an identifier for an object of type TerraboxTf.
+type TerraboxTfID = dagger.TerraboxTfID
+
 // The `TypeDefID` scalar type represents an identifier for an object of type TypeDef.
 type TypeDefID = dagger.TypeDefID
 
@@ -463,6 +469,24 @@ type Socket = dagger.Socket
 // An interactive terminal that clients can connect to.
 type Terminal = dagger.Terminal
 
+type Terrabox = dagger.Terrabox
+
+// TerraboxTerragruntOpts contains options for Terrabox.Terragrunt
+type TerraboxTerragruntOpts = dagger.TerraboxTerragruntOpts
+
+type TerraboxTf = dagger.TerraboxTf
+
+type WithTerraboxTfFunc = dagger.WithTerraboxTfFunc
+
+// TerraboxTfApplyOpts contains options for TerraboxTf.Apply
+type TerraboxTfApplyOpts = dagger.TerraboxTfApplyOpts
+
+// TerraboxTfPlanOpts contains options for TerraboxTf.Plan
+type TerraboxTfPlanOpts = dagger.TerraboxTfPlanOpts
+
+// TerraboxTfWithCacheBursterOpts contains options for TerraboxTf.WithCacheBurster
+type TerraboxTfWithCacheBursterOpts = dagger.TerraboxTfWithCacheBursterOpts
+
 // A definition of a parameter or return type in a Module.
 type TypeDef = dagger.TypeDef
 
@@ -704,6 +728,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return nil, (*Ci).Node(&parent, ctx, testDataSrc)
+		case "Terrabox":
+			var parent Ci
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var testDataSrc *Directory
+			if inputArgs["testDataSrc"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["testDataSrc"]), &testDataSrc)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testDataSrc", err))
+				}
+			}
+			return nil, (*Ci).Terrabox(&parent, ctx, testDataSrc)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -722,6 +760,10 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(
 						dag.Function("Node",
+							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
+							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
+					WithFunction(
+						dag.Function("Terrabox",
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory")))), nil
 	default:

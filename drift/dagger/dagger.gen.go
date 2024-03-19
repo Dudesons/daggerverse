@@ -418,6 +418,9 @@ type TerraboxTfApplyOpts = dagger.TerraboxTfApplyOpts
 // TerraboxTfPlanOpts contains options for TerraboxTf.Plan
 type TerraboxTfPlanOpts = dagger.TerraboxTfPlanOpts
 
+// TerraboxTfWithCacheBursterOpts contains options for TerraboxTf.WithCacheBurster
+type TerraboxTfWithCacheBursterOpts = dagger.TerraboxTfWithCacheBursterOpts
+
 // A definition of a parameter or return type in a Module.
 type TypeDef = dagger.TypeDef
 
@@ -540,27 +543,33 @@ func convertSlice[I any, O any](in []I, f func(I) O) []O {
 
 func (r Drift) MarshalJSON() ([]byte, error) {
 	var concrete struct {
-		Reports   []string
-		StartTime string
-		Endtime   string
-		StackLen  int
-		DriftLen  int
+		Reports        []string
+		StartTime      string
+		Endtime        string
+		StackLen       int
+		DriftLen       int
+		RootStacksPath string
+		MountPoint     string
 	}
 	concrete.Reports = r.Reports
 	concrete.StartTime = r.StartTime
 	concrete.Endtime = r.Endtime
 	concrete.StackLen = r.StackLen
 	concrete.DriftLen = r.DriftLen
+	concrete.RootStacksPath = r.RootStacksPath
+	concrete.MountPoint = r.MountPoint
 	return json.Marshal(&concrete)
 }
 
 func (r *Drift) UnmarshalJSON(bs []byte) error {
 	var concrete struct {
-		Reports   []string
-		StartTime string
-		Endtime   string
-		StackLen  int
-		DriftLen  int
+		Reports        []string
+		StartTime      string
+		Endtime        string
+		StackLen       int
+		DriftLen       int
+		RootStacksPath string
+		MountPoint     string
 	}
 	err := json.Unmarshal(bs, &concrete)
 	if err != nil {
@@ -571,6 +580,8 @@ func (r *Drift) UnmarshalJSON(bs []byte) error {
 	r.Endtime = concrete.Endtime
 	r.StackLen = concrete.StackLen
 	r.DriftLen = concrete.DriftLen
+	r.RootStacksPath = concrete.RootStacksPath
+	r.MountPoint = concrete.MountPoint
 	return nil
 }
 
@@ -690,13 +701,34 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg maxParallelization", err))
 				}
 			}
-			return (*Drift).Detection(&parent, ctx, src, stackRootPath, maxParallelization)
+			var cacheBursterLevel string
+			if inputArgs["cacheBursterLevel"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["cacheBursterLevel"]), &cacheBursterLevel)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheBursterLevel", err))
+				}
+			}
+			return (*Drift).Detection(&parent, ctx, src, stackRootPath, maxParallelization, cacheBursterLevel)
+		case "":
+			var parent Drift
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var mountPoint string
+			if inputArgs["mountPoint"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["mountPoint"]), &mountPoint)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg mountPoint", err))
+				}
+			}
+			return New(mountPoint), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
 	case "":
 		return dag.Module().
-			WithDescription("A generated module for Drift functions\n\nThis module has been generated via dagger init and serves as a reference to\nbasic module structure as you get started with Dagger.\n\nTwo functions have been pre-created. You can modify, delete, or add to them,\nas needed. They demonstrate usage of arguments and return types using simple\necho and grep commands. The functions can be called from the dagger CLI or\nfrom one of the SDKs.\n\nThe first line in this comment block is a short description line and the\nrest is a long description with more detail on the module's purpose or usage,\nif appropriate. All modules should have a short description.\n").
+			WithDescription("A Drift detection module around terraform/terragrunt which allow to send a report\n").
 			WithObject(
 				dag.TypeDef().WithObject("Drift").
 					WithFunction(
@@ -708,9 +740,15 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("Detection",
 							dag.TypeDef().WithObject("Drift")).
-							WithArg("src", dag.TypeDef().WithObject("Directory")).
-							WithArg("stackRootPath", dag.TypeDef().WithKind(StringKind)).
-							WithArg("maxParallelization", dag.TypeDef().WithKind(IntegerKind)))), nil
+							WithDescription("Trigger the drift detection").
+							WithArg("src", dag.TypeDef().WithObject("Directory"), FunctionWithArgOpts{Description: "All the terraform/terragrunt code necessary in order to be able to run plan"}).
+							WithArg("stackRootPath", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "The root path where stack are living"}).
+							WithArg("maxParallelization", dag.TypeDef().WithKind(IntegerKind), FunctionWithArgOpts{Description: "The number of execution in parallel we want to have, 0 mean no limit"}).
+							WithArg("cacheBursterLevel", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if the cache burster level is done per day (daily), per hour (hour), per minute (minute), per second (default)", DefaultValue: JSON("\"hour\"")})).
+					WithConstructor(
+						dag.Function("New",
+							dag.TypeDef().WithObject("Drift")).
+							WithArg("mountPoint", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define where the code is mounted, this could impact for absolute module path", DefaultValue: JSON("\"/terraform\"")}))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

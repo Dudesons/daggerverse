@@ -6627,7 +6627,7 @@ type TerraboxTerragruntOpts struct {
 	Version string
 }
 
-// Returns a container that echoes whatever string argument is provided
+// Expose a terragrunt runtime
 func (r *Terrabox) Terragrunt(opts ...TerraboxTerragruntOpts) *TerraboxTf {
 	q := r.query.Select("terragrunt")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -6675,6 +6675,7 @@ type TerraboxTfApplyOpts struct {
 	DestroyMode bool
 }
 
+// Run an apply on a specific stack
 func (r *TerraboxTf) Apply(workDir string, opts ...TerraboxTfApplyOpts) *TerraboxTf {
 	q := r.query.Select("apply")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -6690,6 +6691,7 @@ func (r *TerraboxTf) Apply(workDir string, opts ...TerraboxTfApplyOpts) *Terrabo
 	}
 }
 
+// expose the module catalog (only available for terragrunt)
 func (r *TerraboxTf) Catalog() *Terminal {
 	q := r.query.Select("catalog")
 
@@ -6698,6 +6700,7 @@ func (r *TerraboxTf) Catalog() *Terminal {
 	}
 }
 
+// Expose the container
 func (r *TerraboxTf) Container() *Container {
 	q := r.query.Select("container")
 
@@ -6706,6 +6709,7 @@ func (r *TerraboxTf) Container() *Container {
 	}
 }
 
+// Return the source directory
 func (r *TerraboxTf) Directory() *Directory {
 	q := r.query.Select("directory")
 
@@ -6714,6 +6718,7 @@ func (r *TerraboxTf) Directory() *Directory {
 	}
 }
 
+// Indicate to disable the the color in the output
 func (r *TerraboxTf) DisableColor() *TerraboxTf {
 	q := r.query.Select("disableColor")
 
@@ -6722,6 +6727,7 @@ func (r *TerraboxTf) DisableColor() *TerraboxTf {
 	}
 }
 
+// Execute the call chain
 func (r *TerraboxTf) Do(ctx context.Context) (string, error) {
 	if r.do != nil {
 		return *r.do, nil
@@ -6734,6 +6740,7 @@ func (r *TerraboxTf) Do(ctx context.Context) (string, error) {
 	return response, q.Execute(ctx)
 }
 
+// Format the code
 func (r *TerraboxTf) Format(workDir string, check bool) *TerraboxTf {
 	q := r.query.Select("format")
 	q = q.Arg("workDir", workDir)
@@ -6793,6 +6800,7 @@ func (r *TerraboxTf) UnmarshalJSON(bs []byte) error {
 	return nil
 }
 
+// Return the output of a specific stack
 func (r *TerraboxTf) Output(workDir string, isJson bool) *TerraboxTf {
 	q := r.query.Select("output")
 	q = q.Arg("workDir", workDir)
@@ -6815,6 +6823,7 @@ type TerraboxTfPlanOpts struct {
 	DetailedExitCode bool
 }
 
+// Run a plan on a specific stack
 func (r *TerraboxTf) Plan(workDir string, opts ...TerraboxTfPlanOpts) *TerraboxTf {
 	q := r.query.Select("plan")
 	for i := len(opts) - 1; i >= 0; i-- {
@@ -6834,6 +6843,7 @@ func (r *TerraboxTf) Plan(workDir string, opts ...TerraboxTfPlanOpts) *TerraboxT
 	}
 }
 
+// Execute the run-all command (only available for terragrunt)
 func (r *TerraboxTf) RunAll(workDir string, cmd string) *TerraboxTf {
 	q := r.query.Select("runAll")
 	q = q.Arg("workDir", workDir)
@@ -6844,6 +6854,7 @@ func (r *TerraboxTf) RunAll(workDir string, cmd string) *TerraboxTf {
 	}
 }
 
+// Open a shell
 func (r *TerraboxTf) Shell() *Terminal {
 	q := r.query.Select("shell")
 
@@ -6852,6 +6863,29 @@ func (r *TerraboxTf) Shell() *Terminal {
 	}
 }
 
+// TerraboxTfWithCacheBursterOpts contains options for TerraboxTf.WithCacheBurster
+type TerraboxTfWithCacheBursterOpts struct {
+	//
+	// Define if the cache burster level is done per day (daily), per hour (hour), per minute (minute), per second (default)
+	//
+	CacheBursterLevel string
+}
+
+func (r *TerraboxTf) WithCacheBurster(opts ...TerraboxTfWithCacheBursterOpts) *TerraboxTf {
+	q := r.query.Select("withCacheBurster")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `cacheBursterLevel` optional argument
+		if !querybuilder.IsZeroValue(opts[i].CacheBursterLevel) {
+			q = q.Arg("cacheBursterLevel", opts[i].CacheBursterLevel)
+		}
+	}
+
+	return &TerraboxTf{
+		query: q,
+	}
+}
+
+// Use a new container
 func (r *TerraboxTf) WithContainer(ctr *Container) *TerraboxTf {
 	assertNotNil("ctr", ctr)
 	q := r.query.Select("withContainer")
@@ -6862,6 +6896,7 @@ func (r *TerraboxTf) WithContainer(ctr *Container) *TerraboxTf {
 	}
 }
 
+// Convert a dotfile format to secret environment variables in the container (could be use to configure providers)
 func (r *TerraboxTf) WithSecretDotEnv(dotEnv *Secret) *TerraboxTf {
 	assertNotNil("dotEnv", dotEnv)
 	q := r.query.Select("withSecretDotEnv")
@@ -6872,6 +6907,7 @@ func (r *TerraboxTf) WithSecretDotEnv(dotEnv *Secret) *TerraboxTf {
 	}
 }
 
+// Mount the source code at the given path
 func (r *TerraboxTf) WithSource(path string, src *Directory) *TerraboxTf {
 	assertNotNil("src", src)
 	q := r.query.Select("withSource")

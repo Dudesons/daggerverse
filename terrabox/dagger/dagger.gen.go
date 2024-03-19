@@ -525,18 +525,24 @@ func (r *Terrabox) UnmarshalJSON(bs []byte) error {
 
 func (r Tf) MarshalJSON() ([]byte, error) {
 	var concrete struct {
-		Ctr *Container
-		Bin string
+		Ctr      *Container
+		Bin      string
+		RootPath string
+		NoColor  bool
 	}
 	concrete.Ctr = r.Ctr
 	concrete.Bin = r.Bin
+	concrete.RootPath = r.RootPath
+	concrete.NoColor = r.NoColor
 	return json.Marshal(&concrete)
 }
 
 func (r *Tf) UnmarshalJSON(bs []byte) error {
 	var concrete struct {
-		Ctr *Container
-		Bin string
+		Ctr      *Container
+		Bin      string
+		RootPath string
+		NoColor  bool
 	}
 	err := json.Unmarshal(bs, &concrete)
 	if err != nil {
@@ -544,6 +550,8 @@ func (r *Tf) UnmarshalJSON(bs []byte) error {
 	}
 	r.Ctr = concrete.Ctr
 	r.Bin = concrete.Bin
+	r.RootPath = concrete.RootPath
+	r.NoColor = concrete.NoColor
 	return nil
 }
 
@@ -614,14 +622,21 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var stringArg string
-			if inputArgs["stringArg"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["stringArg"]), &stringArg)
+			var image string
+			if inputArgs["image"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["image"]), &image)
 				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg stringArg", err))
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg image", err))
 				}
 			}
-			return (*Terrabox).Terragrunt(&parent, stringArg), nil
+			var version string
+			if inputArgs["version"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["version"]), &version)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg version", err))
+				}
+			}
+			return (*Terrabox).Terragrunt(&parent, image, version), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -676,6 +691,13 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return (*Tf).WithSecretDotEnv(&parent, dotEnv), nil
+		case "DisableColor":
+			var parent Tf
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*Tf).DisableColor(&parent), nil
 		case "Container":
 			var parent Tf
 			err = json.Unmarshal(parentJSON, &parent)
@@ -690,6 +712,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
 			return (*Tf).Do(&parent, ctx)
+		case "Directory":
+			var parent Tf
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*Tf).Directory(&parent), nil
+		case "Shell":
+			var parent Tf
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			return (*Tf).Shell(&parent), nil
 		case "Plan":
 			var parent Tf
 			err = json.Unmarshal(parentJSON, &parent)
@@ -710,7 +746,14 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg destroyMode", err))
 				}
 			}
-			return (*Tf).Plan(&parent, workDir, destroyMode), nil
+			var detailedExitCode bool
+			if inputArgs["detailedExitCode"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["detailedExitCode"]), &detailedExitCode)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg detailedExitCode", err))
+				}
+			}
+			return (*Tf).Plan(&parent, workDir, destroyMode, detailedExitCode), nil
 		case "Apply":
 			var parent Tf
 			err = json.Unmarshal(parentJSON, &parent)
@@ -801,14 +844,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
-			var modulePath string
-			if inputArgs["modulePath"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["modulePath"]), &modulePath)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg modulePath", err))
-				}
-			}
-			return (*Tf).Catalog(&parent, modulePath), nil
+			return (*Tf).Catalog(&parent), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -821,7 +857,8 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 						dag.Function("Terragrunt",
 							dag.TypeDef().WithObject("Tf")).
 							WithDescription("Returns a container that echoes whatever string argument is provided").
-							WithArg("stringArg", dag.TypeDef().WithKind(StringKind)))).
+							WithArg("image", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "The image to use which contain terragrunt ecosystem", DefaultValue: JSON("\"alpine/terragrunt\"")}).
+							WithArg("version", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "The version of the image to use", DefaultValue: JSON("\"1.7.4\"")}))).
 			WithObject(
 				dag.TypeDef().WithObject("Tf").
 					WithFunction(
@@ -838,21 +875,31 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							dag.TypeDef().WithObject("Tf")).
 							WithArg("dotEnv", dag.TypeDef().WithObject("Secret"))).
 					WithFunction(
+						dag.Function("DisableColor",
+							dag.TypeDef().WithObject("Tf"))).
+					WithFunction(
 						dag.Function("Container",
 							dag.TypeDef().WithObject("Container"))).
 					WithFunction(
 						dag.Function("Do",
 							dag.TypeDef().WithKind(StringKind))).
 					WithFunction(
+						dag.Function("Directory",
+							dag.TypeDef().WithObject("Directory"))).
+					WithFunction(
+						dag.Function("Shell",
+							dag.TypeDef().WithObject("Terminal"))).
+					WithFunction(
 						dag.Function("Plan",
 							dag.TypeDef().WithObject("Tf")).
-							WithArg("workDir", dag.TypeDef().WithKind(StringKind)).
-							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind))).
+							WithArg("workDir", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define the path where to execute the command"}).
+							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if we are executing the plan in destroy mode or not"}).
+							WithArg("detailedExitCode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if the exit code is in detailed mode or not (0 - Succeeded, diff is empty (no changes) | 1 - Errored | 2 - Succeeded, there is a diff)"})).
 					WithFunction(
 						dag.Function("Apply",
 							dag.TypeDef().WithObject("Tf")).
-							WithArg("workDir", dag.TypeDef().WithKind(StringKind)).
-							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind))).
+							WithArg("workDir", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define the path where to execute the command"}).
+							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if we are executing the plan in destroy mode or not"})).
 					WithFunction(
 						dag.Function("Format",
 							dag.TypeDef().WithObject("Tf")).
@@ -870,10 +917,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							WithArg("cmd", dag.TypeDef().WithKind(StringKind))).
 					WithFunction(
 						dag.Function("Catalog",
-							dag.TypeDef().WithObject("Service")).
-							WithArg("modulePath", dag.TypeDef().WithKind(StringKind))).
-					WithField("Ctr", dag.TypeDef().WithObject("Container")).
-					WithField("Bin", dag.TypeDef().WithKind(StringKind))), nil
+							dag.TypeDef().WithObject("Terminal")))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

@@ -9,5 +9,5 @@ dependencies {
 }
 
 inputs = {
-  length        = 2
+  length        = 8
 }

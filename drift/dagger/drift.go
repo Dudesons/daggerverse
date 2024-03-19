@@ -13,7 +13,20 @@ type report struct {
 	DriftContent string
 }
 
-func (d *Drift) Detection(ctx context.Context, src *Directory, stackRootPath string, maxParallelization int) (*Drift, error) {
+// Trigger the drift detection
+func (d *Drift) Detection(
+	ctx context.Context,
+	// All the terraform/terragrunt code necessary in order to be able to run plan
+	src *Directory,
+	// The root path where stack are living
+	stackRootPath string,
+	// The number of execution in parallel we want to have, 0 mean no limit
+	maxParallelization int,
+	// Define if the cache burster level is done per day (daily), per hour (hour), per minute (minute), per second (default)
+	// +optional
+	// +default="hour"
+	cacheBursterLevel string,
+) (*Drift, error) {
 	d.RootStacksPath = stackRootPath
 	d.StartTime = time.Now().Format("2006-01-02 3:4:5 PM")
 	stacks, err := src.Entries(ctx, DirectoryEntriesOpts{Path: stackRootPath})
@@ -22,7 +35,7 @@ func (d *Drift) Detection(ctx context.Context, src *Directory, stackRootPath str
 	}
 
 	d.StackLen = len(stacks)
-	reportChan := make(chan report, len(stacks))
+	reportChan := make(chan report, d.StackLen)
 
 	runPool := pool.New()
 	if maxParallelization != 0 {
@@ -45,9 +58,10 @@ func (d *Drift) Detection(ctx context.Context, src *Directory, stackRootPath str
 			_, err := dag.
 				Terrabox().
 				Terragrunt().
-				WithSource("/terraform", src).
+				WithSource(d.MountPoint, src).
 				DisableColor().
-				Plan(stackRootPath+"/"+internalStackName, TerraboxTfPlanOpts{DetailedExitCode: true}).
+				WithCacheBurster(TerraboxTfWithCacheBursterOpts{CacheBursterLevel: cacheBursterLevel}).
+				Plan(d.MountPoint+"/"+d.RootStacksPath+"/"+internalStackName, TerraboxTfPlanOpts{DetailedExitCode: true}).
 				Do(ctx)
 			if err != nil {
 				reportChan <- report{StackName: internalStackName, DriftContent: err.Error()}
