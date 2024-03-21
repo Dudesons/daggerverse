@@ -4,29 +4,53 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
-	"regexp"
-	"slices"
-	"strconv"
 	"strings"
 )
 
+const workingDir = "/opt/repo/"
+
 func New(
+	ctx context.Context,
 	// A git repository where the release process will be applied
 	gitRepo *Directory,
 	// The module name to publish
 	component string,
+) (*ModReleaser, error) {
+	dagManifest := daggerManifest{}
+	c, err := gitRepo.Directory(component).File("dagger.json").Contents(ctx)
+	if err != nil {
+		return nil, err
+	}
 
-) *ModReleaser {
-	return &ModReleaser{
+	err = json.Unmarshal([]byte(c), &dagManifest)
+	if err != nil {
+		return nil, err
+	}
+
+	releaser := &ModReleaser{
 		Component: component,
 		Ctr: dag.
 			Container().
 			From("alpine:latest").
-			WithExec([]string{"apk", "add", "--no-cache", "git"}).
-			WithDirectory("/opt/repo/", gitRepo).
-			WithWorkdir("/opt/repo/"),
+			WithExec([]string{"apk", "add", "--no-cache", "git", "curl", "openssh-client"}).
+			WithExec([]string{
+				"sh", "-c",
+				fmt.Sprintf(
+					"curl -L https://dl.dagger.io/dagger/install.sh | DAGGER_VERSION=%s sh",
+					strings.Split(dagManifest.EngineVersion, "v")[1]),
+			}).
+			WithDirectory(workingDir, gitRepo).
+			WithWorkdir(workingDir),
 	}
+
+	err = releaser.fetchTags(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return releaser, nil
 }
 
 type ModReleaser struct {
@@ -38,42 +62,44 @@ type ModReleaser struct {
 	Component string
 }
 
-func (m *ModReleaser) ListTags(ctx context.Context) (*ModReleaser, error) {
-	versionRegexp, err := regexp.Compile(m.Component + "/v\\d+\\.\\d+\\.\\d+")
-	if err != nil {
-		return nil, err
+// Setup global git config, it won't affect the git config of the local repository
+func (m *ModReleaser) WithGitConfig(
+	// A path to a git config file to use
+	// +optional
+	cfg *File,
+	// the email to use in the git config
+	// +optional
+	email string,
+	// the username to use in the git config
+	// +optional
+	name string,
+) *ModReleaser {
+	if cfg != nil {
+		m.WithContainer(m.Ctr.WithFile("/etc/gitconfig", cfg))
 	}
 
-	output, err := m.Ctr.WithExec([]string{"git", "tag", "-l"}).Stdout(ctx)
-	if err != nil {
-		return nil, err
+	if email != "" {
+		m.WithContainer(m.Ctr.WithExec([]string{"git", "config", "--global", "user.email", email}))
 	}
 
-	for _, tag := range strings.Split(output, "\n") {
-		if versionRegexp.MatchString(tag) {
-			m.Tags = append(m.Tags, tag)
-		}
+	if name != "" {
+		m.WithContainer(m.Ctr.WithExec([]string{"git", "config", "--global", "user.name", name}))
 	}
 
-	slices.Sort(m.Tags)
-
-	return m, nil
-}
-
-func (m *ModReleaser) WithGitConfig(cfg *File) *ModReleaser {
 	return m
 }
 
-func (m *ModReleaser) WithGitConfigEmail(email string) *ModReleaser {
-	return m
+// Mount ssh keys from the host
+func (m *ModReleaser) WithSshKeys(
+	// The directory with ssh keys to mount
+	src *Directory,
+) *ModReleaser {
+	return m.WithContainer(m.Ctr.WithDirectory("/root/.ssh", src))
 }
 
-func (m *ModReleaser) WithGitConfigName(name string) *ModReleaser {
-	return m
-}
-
+// Select a specific git branch
 func (m *ModReleaser) WithBranch(
-	// Define the branch fro where to publish
+	// Define the branch from where to publish
 	// +optional
 	// +default="main"
 	branch string,
@@ -81,6 +107,7 @@ func (m *ModReleaser) WithBranch(
 	return m.WithContainer(m.Ctr.WithExec([]string{"git", "checkout", branch}))
 }
 
+// Increase the major version
 func (m *ModReleaser) Major(
 	// Define a custom message for the git tag otherwise it will be the default from the function
 	// +optional
@@ -89,6 +116,7 @@ func (m *ModReleaser) Major(
 	return m.bumpVersion(true, false, false, msg)
 }
 
+// Increase the minor version
 func (m *ModReleaser) Minor(
 	// Define a custom message for the git tag otherwise it will be the default from the function
 	// +optional
@@ -97,6 +125,7 @@ func (m *ModReleaser) Minor(
 	return m.bumpVersion(false, true, false, msg)
 }
 
+// Increase the patch version
 func (m *ModReleaser) Patch(
 	// Define a custom message for the git tag otherwise it will be the default from the function
 	// +optional
@@ -105,73 +134,25 @@ func (m *ModReleaser) Patch(
 	return m.bumpVersion(false, false, true, msg)
 }
 
-func (m *ModReleaser) Publish() (*ModReleaser, error) {
-	m.Ctr.WithExec([]string{"git", "push", "origin", m.Tag})
+// Publish the git tag and the module
+func (m *ModReleaser) Publish(
+	// Indicate if the publish process should git push the tag
+	// +optional
+	gitPush bool,
+) *ModReleaser {
+	if gitPush {
+		m.WithContainer(m.Ctr.WithExec([]string{"git", "push", "origin", m.Tag}))
+	}
 
-	return nil, nil
+	return m.WithContainer(m.Ctr.WithExec([]string{"dagger", "publish", "-m", m.Component}, ContainerWithExecOpts{ExperimentalPrivilegedNesting: true}))
 }
 
-func (m *ModReleaser) WithContainer(ctr *Container) *ModReleaser {
-	m.Ctr = ctr
-
-	return m
+// Return the git repository
+func (m *ModReleaser) Repository() *Directory {
+	return m.Ctr.Directory(workingDir)
 }
 
-func (m *ModReleaser) bumpVersion(major, minor, patch bool, customMsg string) (*ModReleaser, error) {
-	var msg string
-	var firstRelease bool
-	prefixTag := m.Component + "/v"
-	if len(m.Tags) == 0 {
-		msg = "New component: " + m.Component
-		m.Tag = prefixTag + "0.1.0"
-		firstRelease = true
-	}
-
-	if !firstRelease {
-		verMajor, verMinor, verPatch, err := m.parseSemver(strings.Split(strings.Split(m.Tags[len(m.Tags)-1], "/v")[1], "."))
-		if err != nil {
-			return nil, err
-		}
-
-		switch {
-		case major:
-			verMajor++
-		case minor:
-			verMinor++
-		case patch:
-			verPatch++
-		default:
-			return nil, fmt.Errorf("'major', 'minor', or 'patch' should be set to true")
-		}
-
-		m.Tag = prefixTag + fmt.Sprintf("%d.%d.%d", verMajor, verMinor, verPatch)
-		msg = "New release " + m.Tag
-	}
-
-	if customMsg != "" {
-		msg = customMsg
-	}
-
-	return m.WithContainer(m.Ctr.WithExec([]string{"git", "tag", "-a", m.Tag, "-m", msg})), nil
-}
-
-func (m ModReleaser) parseSemver(semverParts []string) (int, int, int, error) {
-	major, err := strconv.Atoi(semverParts[0])
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	minor, err := strconv.Atoi(semverParts[1])
-	if err != nil {
-		return 0, 0, 0, err
-	}
-	patch, err := strconv.Atoi(semverParts[2])
-	if err != nil {
-		return 0, 0, 0, err
-	}
-
-	return major, minor, patch, nil
-}
-
-func (m ModReleaser) Shell() *Terminal {
-	return m.Ctr.WithDefaultTerminalCmd(nil).Terminal()
+// Execute all commands
+func (m *ModReleaser) Do(ctx context.Context) (string, error) {
+	return m.Ctr.Stdout(ctx)
 }

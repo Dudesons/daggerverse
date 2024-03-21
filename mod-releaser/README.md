@@ -1,20 +1,17 @@
 # Mod Releaser
 
-## Potential feature
+[Daggerverse](https://daggerverse.dev/mod/github.com/Dudesons/daggerverse/mod-releaser)
+![Dagger Version](https://img.shields.io/badge/dagger%20version-%3E=0.10.2-0f0f19.svg?style=flat-square)
 
- * git tag -> <component>/<version>
- * git push tags
- * find dagger modules + get only modified
- * implement automatic bump version
+A module which publish dagger module
 
+## Usage
 
-input:
- component name
- git repo
-call:
- minor/patch/major
+```shell
+dagger call 
+```
 
-list git tag to search the latest release of a component
-then bump the version if not found create a 0.1.0
-push the git tag
-publish with dagger
+# TODO
+
+ * [ ] Implement ssh agent socket when socket is available as input
+ * [ ] Automatic decision to bump major / minor / patch
