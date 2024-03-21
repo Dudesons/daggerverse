@@ -7,8 +7,18 @@ A module which publish dagger module
 
 ## Usage
 
+*This example publish the module `mod-releaser` and the call is run inside this module.*  
+*Also the daggerverse repository is inside the home so adapt the command according where your repository is located.*
+
 ```shell
-dagger call 
+dagger call \
+  --git-repo ..
+  --component mod-releaser \
+  with-git-config --cfg=$HOME/.gitconfig \
+  minor \
+  publish \
+  repository \
+  export --path $HOME/daggerverse/
 ```
 
 # TODO
