@@ -26,7 +26,7 @@ Function Commands:
 ```shell
 dagger call \
   detection \
-  --src=../testdata/terrabox/terraform/ \
+  --src=../testdata/infrabox/terraform/ \
   --stack-root-path=stacks/dev/europe-west1/staging \
   --max-parallelization=0 \
   report-to-slack \

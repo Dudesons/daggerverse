@@ -16,7 +16,7 @@ jobs:
           - autodetection
           - node
           - yq
-          - terrabox
+          - infrabox
 
     steps:
       - uses: actions/checkout@v4

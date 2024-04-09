@@ -509,12 +509,12 @@ func convertSlice[I any, O any](in []I, f func(I) O) []O {
 	return out
 }
 
-func (r Terrabox) MarshalJSON() ([]byte, error) {
+func (r Infrabox) MarshalJSON() ([]byte, error) {
 	var concrete struct{}
 	return json.Marshal(&concrete)
 }
 
-func (r *Terrabox) UnmarshalJSON(bs []byte) error {
+func (r *Infrabox) UnmarshalJSON(bs []byte) error {
 	var concrete struct{}
 	err := json.Unmarshal(bs, &concrete)
 	if err != nil {
@@ -614,10 +614,10 @@ func main() {
 
 func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName string, inputArgs map[string][]byte) (_ any, err error) {
 	switch parentName {
-	case "Terrabox":
+	case "Infrabox":
 		switch fnName {
 		case "Terragrunt":
-			var parent Terrabox
+			var parent Infrabox
 			err = json.Unmarshal(parentJSON, &parent)
 			if err != nil {
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
@@ -636,7 +636,7 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg version", err))
 				}
 			}
-			return (*Terrabox).Terragrunt(&parent, image, version), nil
+			return (*Infrabox).Terragrunt(&parent, image, version), nil
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -726,6 +726,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
 			}
 			return (*Tf).Shell(&parent), nil
+		case "WithCacheBurster":
+			var parent Tf
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var cacheBursterLevel string
+			if inputArgs["cacheBursterLevel"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["cacheBursterLevel"]), &cacheBursterLevel)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg cacheBursterLevel", err))
+				}
+			}
+			return (*Tf).WithCacheBurster(&parent, cacheBursterLevel), nil
 		case "Plan":
 			var parent Tf
 			err = json.Unmarshal(parentJSON, &parent)
@@ -850,13 +864,13 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 		}
 	case "":
 		return dag.Module().
-			WithDescription("A generated module for Terrabox functions\n\nThis module has been generated via dagger init and serves as a reference to\nbasic module structure as you get started with Dagger.\n\nTwo functions have been pre-created. You can modify, delete, or add to them,\nas needed. They demonstrate usage of arguments and return types using simple\necho and grep commands. The functions can be called from the dagger CLI or\nfrom one of the SDKs.\n\nThe first line in this comment block is a short description line and the\nrest is a long description with more detail on the module's purpose or usage,\nif appropriate. All modules should have a short description.\n").
+			WithDescription("A module for playing on the terraform ecosystem\n").
 			WithObject(
-				dag.TypeDef().WithObject("Terrabox").
+				dag.TypeDef().WithObject("Infrabox").
 					WithFunction(
 						dag.Function("Terragrunt",
 							dag.TypeDef().WithObject("Tf")).
-							WithDescription("Returns a container that echoes whatever string argument is provided").
+							WithDescription("Expose a terragrunt runtime").
 							WithArg("image", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "The image to use which contain terragrunt ecosystem", DefaultValue: JSON("\"alpine/terragrunt\"")}).
 							WithArg("version", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "The version of the image to use", DefaultValue: JSON("\"1.7.4\"")}))).
 			WithObject(
@@ -864,60 +878,79 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 					WithFunction(
 						dag.Function("WithSource",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Mount the source code at the given path").
 							WithArg("path", dag.TypeDef().WithKind(StringKind)).
 							WithArg("src", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(
 						dag.Function("WithContainer",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Use a new container").
 							WithArg("ctr", dag.TypeDef().WithObject("Container"))).
 					WithFunction(
 						dag.Function("WithSecretDotEnv",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Convert a dotfile format to secret environment variables in the container (could be use to configure providers)").
 							WithArg("dotEnv", dag.TypeDef().WithObject("Secret"))).
 					WithFunction(
 						dag.Function("DisableColor",
-							dag.TypeDef().WithObject("Tf"))).
+							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Indicate to disable the the color in the output")).
 					WithFunction(
 						dag.Function("Container",
-							dag.TypeDef().WithObject("Container"))).
+							dag.TypeDef().WithObject("Container")).
+							WithDescription("Expose the container")).
 					WithFunction(
 						dag.Function("Do",
-							dag.TypeDef().WithKind(StringKind))).
+							dag.TypeDef().WithKind(StringKind)).
+							WithDescription("Execute the call chain")).
 					WithFunction(
 						dag.Function("Directory",
-							dag.TypeDef().WithObject("Directory"))).
+							dag.TypeDef().WithObject("Directory")).
+							WithDescription("Return the source directory")).
 					WithFunction(
 						dag.Function("Shell",
-							dag.TypeDef().WithObject("Terminal"))).
+							dag.TypeDef().WithObject("Terminal")).
+							WithDescription("Open a shell")).
+					WithFunction(
+						dag.Function("WithCacheBurster",
+							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Define the cache buster strategy").
+							WithArg("cacheBursterLevel", dag.TypeDef().WithKind(StringKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if the cache burster level is done per day ('daily'), per hour ('hour'), per minute ('minute'), per second ('default') or no cache buster ('none')"})).
 					WithFunction(
 						dag.Function("Plan",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Run a plan on a specific stack").
 							WithArg("workDir", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define the path where to execute the command"}).
 							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if we are executing the plan in destroy mode or not"}).
 							WithArg("detailedExitCode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if the exit code is in detailed mode or not (0 - Succeeded, diff is empty (no changes) | 1 - Errored | 2 - Succeeded, there is a diff)"})).
 					WithFunction(
 						dag.Function("Apply",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Run an apply on a specific stack").
 							WithArg("workDir", dag.TypeDef().WithKind(StringKind), FunctionWithArgOpts{Description: "Define the path where to execute the command"}).
 							WithArg("destroyMode", dag.TypeDef().WithKind(BooleanKind).WithOptional(true), FunctionWithArgOpts{Description: "Define if we are executing the plan in destroy mode or not"})).
 					WithFunction(
 						dag.Function("Format",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Format the code").
 							WithArg("workDir", dag.TypeDef().WithKind(StringKind)).
 							WithArg("check", dag.TypeDef().WithKind(BooleanKind))).
 					WithFunction(
 						dag.Function("Output",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Return the output of a specific stack").
 							WithArg("workDir", dag.TypeDef().WithKind(StringKind)).
 							WithArg("isJson", dag.TypeDef().WithKind(BooleanKind))).
 					WithFunction(
 						dag.Function("RunAll",
 							dag.TypeDef().WithObject("Tf")).
+							WithDescription("Execute the run-all command (only available for terragrunt)").
 							WithArg("workDir", dag.TypeDef().WithKind(StringKind)).
 							WithArg("cmd", dag.TypeDef().WithKind(StringKind))).
 					WithFunction(
 						dag.Function("Catalog",
-							dag.TypeDef().WithObject("Terminal")))), nil
+							dag.TypeDef().WithObject("Terminal")).
+							WithDescription("expose the module catalog (only available for terragrunt)"))), nil
 	default:
 		return nil, fmt.Errorf("unknown object %s", parentName)
 	}

@@ -7,12 +7,12 @@
       "source": "../autodetection"
     },
     {
-      "name": "node",
-      "source": "../node"
+      "name": "infrabox",
+      "source": "../infrabox"
     },
     {
-      "name": "terrabox",
-      "source": "../terrabox"
+      "name": "node",
+      "source": "../node"
     },
     {
       "name": "yq",

@@ -2,10 +2,10 @@
 
 package main
 
-type Terrabox struct{}
+type Infrabox struct{}
 
 // Expose a terragrunt runtime
-func (m *Terrabox) Terragrunt(
+func (m *Infrabox) Terragrunt(
 	// The image to use which contain terragrunt ecosystem
 	// +optional
 	// +default="alpine/terragrunt"

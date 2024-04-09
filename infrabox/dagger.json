@@ -1,5 +1,5 @@
 {
-  "name": "terrabox",
+  "name": "infrabox",
   "sdk": "go",
   "dependencies": [
     {

@@ -70,6 +70,12 @@ type GitRefID = dagger.GitRefID
 // The `GitRepositoryID` scalar type represents an identifier for an object of type GitRepository.
 type GitRepositoryID = dagger.GitRepositoryID
 
+// The `InfraboxID` scalar type represents an identifier for an object of type Infrabox.
+type InfraboxID = dagger.InfraboxID
+
+// The `InfraboxTfID` scalar type represents an identifier for an object of type InfraboxTf.
+type InfraboxTfID = dagger.InfraboxTfID
+
 // The `InputTypeDefID` scalar type represents an identifier for an object of type InputTypeDef.
 type InputTypeDefID = dagger.InputTypeDefID
 
@@ -122,12 +128,6 @@ type SocketID = dagger.SocketID
 
 // The `TerminalID` scalar type represents an identifier for an object of type Terminal.
 type TerminalID = dagger.TerminalID
-
-// The `TerraboxID` scalar type represents an identifier for an object of type Terrabox.
-type TerraboxID = dagger.TerraboxID
-
-// The `TerraboxTfID` scalar type represents an identifier for an object of type TerraboxTf.
-type TerraboxTfID = dagger.TerraboxTfID
 
 // The `TypeDefID` scalar type represents an identifier for an object of type TypeDef.
 type TypeDefID = dagger.TypeDefID
@@ -330,6 +330,24 @@ type GitRefTreeOpts = dagger.GitRefTreeOpts
 // A git repository.
 type GitRepository = dagger.GitRepository
 
+type Infrabox = dagger.Infrabox
+
+// InfraboxTerragruntOpts contains options for Infrabox.Terragrunt
+type InfraboxTerragruntOpts = dagger.InfraboxTerragruntOpts
+
+type InfraboxTf = dagger.InfraboxTf
+
+type WithInfraboxTfFunc = dagger.WithInfraboxTfFunc
+
+// InfraboxTfApplyOpts contains options for InfraboxTf.Apply
+type InfraboxTfApplyOpts = dagger.InfraboxTfApplyOpts
+
+// InfraboxTfPlanOpts contains options for InfraboxTf.Plan
+type InfraboxTfPlanOpts = dagger.InfraboxTfPlanOpts
+
+// InfraboxTfWithCacheBursterOpts contains options for InfraboxTf.WithCacheBurster
+type InfraboxTfWithCacheBursterOpts = dagger.InfraboxTfWithCacheBursterOpts
+
 // A graphql input type, which is essentially just a group of named args.
 // This is currently only used to represent pre-existing usage of graphql input types
 // in the core API. It is not used by user modules and shouldn't ever be as user
@@ -468,24 +486,6 @@ type Socket = dagger.Socket
 
 // An interactive terminal that clients can connect to.
 type Terminal = dagger.Terminal
-
-type Terrabox = dagger.Terrabox
-
-// TerraboxTerragruntOpts contains options for Terrabox.Terragrunt
-type TerraboxTerragruntOpts = dagger.TerraboxTerragruntOpts
-
-type TerraboxTf = dagger.TerraboxTf
-
-type WithTerraboxTfFunc = dagger.WithTerraboxTfFunc
-
-// TerraboxTfApplyOpts contains options for TerraboxTf.Apply
-type TerraboxTfApplyOpts = dagger.TerraboxTfApplyOpts
-
-// TerraboxTfPlanOpts contains options for TerraboxTf.Plan
-type TerraboxTfPlanOpts = dagger.TerraboxTfPlanOpts
-
-// TerraboxTfWithCacheBursterOpts contains options for TerraboxTf.WithCacheBurster
-type TerraboxTfWithCacheBursterOpts = dagger.TerraboxTfWithCacheBursterOpts
 
 // A definition of a parameter or return type in a Module.
 type TypeDef = dagger.TypeDef
@@ -700,6 +700,20 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return nil, (*Ci).Yq(&parent, ctx, testDataSrc)
+		case "Infrabox":
+			var parent Ci
+			err = json.Unmarshal(parentJSON, &parent)
+			if err != nil {
+				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
+			}
+			var testDataSrc *Directory
+			if inputArgs["testDataSrc"] != nil {
+				err = json.Unmarshal([]byte(inputArgs["testDataSrc"]), &testDataSrc)
+				if err != nil {
+					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testDataSrc", err))
+				}
+			}
+			return nil, (*Ci).Infrabox(&parent, ctx, testDataSrc)
 		case "Autodetection":
 			var parent Ci
 			err = json.Unmarshal(parentJSON, &parent)
@@ -728,20 +742,6 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 				}
 			}
 			return nil, (*Ci).Node(&parent, ctx, testDataSrc)
-		case "Terrabox":
-			var parent Ci
-			err = json.Unmarshal(parentJSON, &parent)
-			if err != nil {
-				panic(fmt.Errorf("%s: %w", "failed to unmarshal parent object", err))
-			}
-			var testDataSrc *Directory
-			if inputArgs["testDataSrc"] != nil {
-				err = json.Unmarshal([]byte(inputArgs["testDataSrc"]), &testDataSrc)
-				if err != nil {
-					panic(fmt.Errorf("%s: %w", "failed to unmarshal input arg testDataSrc", err))
-				}
-			}
-			return nil, (*Ci).Terrabox(&parent, ctx, testDataSrc)
 		default:
 			return nil, fmt.Errorf("unknown function %s", fnName)
 		}
@@ -755,15 +755,15 @@ func invoke(ctx context.Context, parentJSON []byte, parentName string, fnName st
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(
+						dag.Function("Infrabox",
+							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
+							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
+					WithFunction(
 						dag.Function("Autodetection",
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
 					WithFunction(
 						dag.Function("Node",
-							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
-							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory"))).
-					WithFunction(
-						dag.Function("Terrabox",
 							dag.TypeDef().WithKind(VoidKind).WithOptional(true)).
 							WithArg("testDataSrc", dag.TypeDef().WithObject("Directory")))), nil
 	default:

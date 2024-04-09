@@ -56,12 +56,12 @@ func (d *Drift) Detection(
 		runPool.Go(func() {
 			internalStackName := stack
 			_, err := dag.
-				Terrabox().
+				Infrabox().
 				Terragrunt().
 				WithSource(d.MountPoint, src).
 				DisableColor().
-				WithCacheBurster(TerraboxTfWithCacheBursterOpts{CacheBursterLevel: cacheBursterLevel}).
-				Plan(d.MountPoint+"/"+d.RootStacksPath+"/"+internalStackName, TerraboxTfPlanOpts{DetailedExitCode: true}).
+				WithCacheBurster(InfraboxTfWithCacheBursterOpts{CacheBursterLevel: cacheBursterLevel}).
+				Plan(d.MountPoint+"/"+d.RootStacksPath+"/"+internalStackName, InfraboxTfPlanOpts{DetailedExitCode: true}).
 				Do(ctx)
 			if err != nil {
 				reportChan <- report{StackName: internalStackName, DriftContent: err.Error()}

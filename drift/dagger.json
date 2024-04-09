@@ -3,12 +3,12 @@
   "sdk": "go",
   "dependencies": [
     {
-      "name": "notify",
-      "source": "github.com/gerhard/daggerverse/notify@4ad0f0317fd57c41001b48c5a9a3a49d39e43210"
+      "name": "infrabox",
+      "source": "../infrabox"
     },
     {
-      "name": "terrabox",
-      "source": "../terrabox"
+      "name": "notify",
+      "source": "github.com/gerhard/daggerverse/notify@4ad0f0317fd57c41001b48c5a9a3a49d39e43210"
     }
   ],
   "source": "dagger",

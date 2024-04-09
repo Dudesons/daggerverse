@@ -150,6 +150,12 @@ type GitRefID string
 // The `GitRepositoryID` scalar type represents an identifier for an object of type GitRepository.
 type GitRepositoryID string
 
+// The `InfraboxID` scalar type represents an identifier for an object of type Infrabox.
+type InfraboxID string
+
+// The `InfraboxTfID` scalar type represents an identifier for an object of type InfraboxTf.
+type InfraboxTfID string
+
 // The `InputTypeDefID` scalar type represents an identifier for an object of type InputTypeDef.
 type InputTypeDefID string
 
@@ -205,12 +211,6 @@ type SocketID string
 
 // The `TerminalID` scalar type represents an identifier for an object of type Terminal.
 type TerminalID string
-
-// The `TerraboxID` scalar type represents an identifier for an object of type Terrabox.
-type TerraboxID string
-
-// The `TerraboxTfID` scalar type represents an identifier for an object of type TerraboxTf.
-type TerraboxTfID string
 
 // The `TypeDefID` scalar type represents an identifier for an object of type TypeDef.
 type TypeDefID string
@@ -3599,6 +3599,372 @@ func (r *GitRepository) Tag(name string) *GitRef {
 	}
 }
 
+type Infrabox struct {
+	query *querybuilder.Selection
+
+	id *InfraboxID
+}
+
+func (r *Infrabox) WithGraphQLQuery(q *querybuilder.Selection) *Infrabox {
+	return &Infrabox{
+		query: q,
+	}
+}
+
+// A unique identifier for this Infrabox.
+func (r *Infrabox) ID(ctx context.Context) (InfraboxID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response InfraboxID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *Infrabox) XXX_GraphQLType() string {
+	return "Infrabox"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *Infrabox) XXX_GraphQLIDType() string {
+	return "InfraboxID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *Infrabox) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *Infrabox) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *Infrabox) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadInfraboxFromID(InfraboxID(id))
+	return nil
+}
+
+// InfraboxTerragruntOpts contains options for Infrabox.Terragrunt
+type InfraboxTerragruntOpts struct {
+	//
+	// The image to use which contain terragrunt ecosystem
+	//
+	Image string
+	//
+	// The version of the image to use
+	//
+	Version string
+}
+
+// Expose a terragrunt runtime
+func (r *Infrabox) Terragrunt(opts ...InfraboxTerragruntOpts) *InfraboxTf {
+	q := r.query.Select("terragrunt")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `image` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Image) {
+			q = q.Arg("image", opts[i].Image)
+		}
+		// `version` optional argument
+		if !querybuilder.IsZeroValue(opts[i].Version) {
+			q = q.Arg("version", opts[i].Version)
+		}
+	}
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+type InfraboxTf struct {
+	query *querybuilder.Selection
+
+	do *string
+	id *InfraboxTfID
+}
+type WithInfraboxTfFunc func(r *InfraboxTf) *InfraboxTf
+
+// With calls the provided function with current InfraboxTf.
+//
+// This is useful for reusability and readability by not breaking the calling chain.
+func (r *InfraboxTf) With(f WithInfraboxTfFunc) *InfraboxTf {
+	return f(r)
+}
+
+func (r *InfraboxTf) WithGraphQLQuery(q *querybuilder.Selection) *InfraboxTf {
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// InfraboxTfApplyOpts contains options for InfraboxTf.Apply
+type InfraboxTfApplyOpts struct {
+	//
+	// Define if we are executing the plan in destroy mode or not
+	//
+	DestroyMode bool
+}
+
+// Run an apply on a specific stack
+func (r *InfraboxTf) Apply(workDir string, opts ...InfraboxTfApplyOpts) *InfraboxTf {
+	q := r.query.Select("apply")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `destroyMode` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DestroyMode) {
+			q = q.Arg("destroyMode", opts[i].DestroyMode)
+		}
+	}
+	q = q.Arg("workDir", workDir)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// expose the module catalog (only available for terragrunt)
+func (r *InfraboxTf) Catalog() *Terminal {
+	q := r.query.Select("catalog")
+
+	return &Terminal{
+		query: q,
+	}
+}
+
+// Expose the container
+func (r *InfraboxTf) Container() *Container {
+	q := r.query.Select("container")
+
+	return &Container{
+		query: q,
+	}
+}
+
+// Return the source directory
+func (r *InfraboxTf) Directory() *Directory {
+	q := r.query.Select("directory")
+
+	return &Directory{
+		query: q,
+	}
+}
+
+// Indicate to disable the the color in the output
+func (r *InfraboxTf) DisableColor() *InfraboxTf {
+	q := r.query.Select("disableColor")
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Execute the call chain
+func (r *InfraboxTf) Do(ctx context.Context) (string, error) {
+	if r.do != nil {
+		return *r.do, nil
+	}
+	q := r.query.Select("do")
+
+	var response string
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// Format the code
+func (r *InfraboxTf) Format(workDir string, check bool) *InfraboxTf {
+	q := r.query.Select("format")
+	q = q.Arg("workDir", workDir)
+	q = q.Arg("check", check)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// A unique identifier for this InfraboxTf.
+func (r *InfraboxTf) ID(ctx context.Context) (InfraboxTfID, error) {
+	if r.id != nil {
+		return *r.id, nil
+	}
+	q := r.query.Select("id")
+
+	var response InfraboxTfID
+
+	q = q.Bind(&response)
+	return response, q.Execute(ctx)
+}
+
+// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
+func (r *InfraboxTf) XXX_GraphQLType() string {
+	return "InfraboxTf"
+}
+
+// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
+func (r *InfraboxTf) XXX_GraphQLIDType() string {
+	return "InfraboxTfID"
+}
+
+// XXX_GraphQLID is an internal function. It returns the underlying type ID
+func (r *InfraboxTf) XXX_GraphQLID(ctx context.Context) (string, error) {
+	id, err := r.ID(ctx)
+	if err != nil {
+		return "", err
+	}
+	return string(id), nil
+}
+
+func (r *InfraboxTf) MarshalJSON() ([]byte, error) {
+	id, err := r.ID(context.Background())
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(id)
+}
+func (r *InfraboxTf) UnmarshalJSON(bs []byte) error {
+	var id string
+	err := json.Unmarshal(bs, &id)
+	if err != nil {
+		return err
+	}
+	*r = *dag.LoadInfraboxTfFromID(InfraboxTfID(id))
+	return nil
+}
+
+// Return the output of a specific stack
+func (r *InfraboxTf) Output(workDir string, isJson bool) *InfraboxTf {
+	q := r.query.Select("output")
+	q = q.Arg("workDir", workDir)
+	q = q.Arg("isJson", isJson)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// InfraboxTfPlanOpts contains options for InfraboxTf.Plan
+type InfraboxTfPlanOpts struct {
+	//
+	// Define if we are executing the plan in destroy mode or not
+	//
+	DestroyMode bool
+	//
+	// Define if the exit code is in detailed mode or not (0 - Succeeded, diff is empty (no changes) | 1 - Errored | 2 - Succeeded, there is a diff)
+	//
+	DetailedExitCode bool
+}
+
+// Run a plan on a specific stack
+func (r *InfraboxTf) Plan(workDir string, opts ...InfraboxTfPlanOpts) *InfraboxTf {
+	q := r.query.Select("plan")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `destroyMode` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DestroyMode) {
+			q = q.Arg("destroyMode", opts[i].DestroyMode)
+		}
+		// `detailedExitCode` optional argument
+		if !querybuilder.IsZeroValue(opts[i].DetailedExitCode) {
+			q = q.Arg("detailedExitCode", opts[i].DetailedExitCode)
+		}
+	}
+	q = q.Arg("workDir", workDir)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Execute the run-all command (only available for terragrunt)
+func (r *InfraboxTf) RunAll(workDir string, cmd string) *InfraboxTf {
+	q := r.query.Select("runAll")
+	q = q.Arg("workDir", workDir)
+	q = q.Arg("cmd", cmd)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Open a shell
+func (r *InfraboxTf) Shell() *Terminal {
+	q := r.query.Select("shell")
+
+	return &Terminal{
+		query: q,
+	}
+}
+
+// InfraboxTfWithCacheBursterOpts contains options for InfraboxTf.WithCacheBurster
+type InfraboxTfWithCacheBursterOpts struct {
+	//
+	// Define if the cache burster level is done per day ('daily'), per hour ('hour'), per minute ('minute'), per second ('default') or no cache buster ('none')
+	//
+	CacheBursterLevel string
+}
+
+// Define the cache buster strategy
+func (r *InfraboxTf) WithCacheBurster(opts ...InfraboxTfWithCacheBursterOpts) *InfraboxTf {
+	q := r.query.Select("withCacheBurster")
+	for i := len(opts) - 1; i >= 0; i-- {
+		// `cacheBursterLevel` optional argument
+		if !querybuilder.IsZeroValue(opts[i].CacheBursterLevel) {
+			q = q.Arg("cacheBursterLevel", opts[i].CacheBursterLevel)
+		}
+	}
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Use a new container
+func (r *InfraboxTf) WithContainer(ctr *Container) *InfraboxTf {
+	assertNotNil("ctr", ctr)
+	q := r.query.Select("withContainer")
+	q = q.Arg("ctr", ctr)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Convert a dotfile format to secret environment variables in the container (could be use to configure providers)
+func (r *InfraboxTf) WithSecretDotEnv(dotEnv *Secret) *InfraboxTf {
+	assertNotNil("dotEnv", dotEnv)
+	q := r.query.Select("withSecretDotEnv")
+	q = q.Arg("dotEnv", dotEnv)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
+// Mount the source code at the given path
+func (r *InfraboxTf) WithSource(path string, src *Directory) *InfraboxTf {
+	assertNotNil("src", src)
+	q := r.query.Select("withSource")
+	q = q.Arg("path", path)
+	q = q.Arg("src", src)
+
+	return &InfraboxTf{
+		query: q,
+	}
+}
+
 // A graphql input type, which is essentially just a group of named args.
 // This is currently only used to represent pre-existing usage of graphql input types
 // in the core API. It is not used by user modules and shouldn't ever be as user
@@ -5637,6 +6003,14 @@ func (r *Client) HTTP(url string, opts ...HTTPOpts) *File {
 	}
 }
 
+func (r *Client) Infrabox() *Infrabox {
+	q := r.query.Select("infrabox")
+
+	return &Infrabox{
+		query: q,
+	}
+}
+
 // Load a CacheVolume from its ID.
 func (r *Client) LoadCacheVolumeFromID(id CacheVolumeID) *CacheVolume {
 	q := r.query.Select("loadCacheVolumeFromID")
@@ -5783,6 +6157,26 @@ func (r *Client) LoadGitRepositoryFromID(id GitRepositoryID) *GitRepository {
 	q = q.Arg("id", id)
 
 	return &GitRepository{
+		query: q,
+	}
+}
+
+// Load a Infrabox from its ID.
+func (r *Client) LoadInfraboxFromID(id InfraboxID) *Infrabox {
+	q := r.query.Select("loadInfraboxFromID")
+	q = q.Arg("id", id)
+
+	return &Infrabox{
+		query: q,
+	}
+}
+
+// Load a InfraboxTf from its ID.
+func (r *Client) LoadInfraboxTfFromID(id InfraboxTfID) *InfraboxTf {
+	q := r.query.Select("loadInfraboxTfFromID")
+	q = q.Arg("id", id)
+
+	return &InfraboxTf{
 		query: q,
 	}
 }
@@ -5947,26 +6341,6 @@ func (r *Client) LoadTerminalFromID(id TerminalID) *Terminal {
 	}
 }
 
-// Load a Terrabox from its ID.
-func (r *Client) LoadTerraboxFromID(id TerraboxID) *Terrabox {
-	q := r.query.Select("loadTerraboxFromID")
-	q = q.Arg("id", id)
-
-	return &Terrabox{
-		query: q,
-	}
-}
-
-// Load a TerraboxTf from its ID.
-func (r *Client) LoadTerraboxTfFromID(id TerraboxTfID) *TerraboxTf {
-	q := r.query.Select("loadTerraboxTfFromID")
-	q = q.Arg("id", id)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
 // Load a TypeDef from its ID.
 func (r *Client) LoadTypeDefFromID(id TypeDefID) *TypeDef {
 	q := r.query.Select("loadTypeDefFromID")
@@ -6110,14 +6484,6 @@ func (r *Client) Socket(id SocketID) *Socket {
 	q = q.Arg("id", id)
 
 	return &Socket{
-		query: q,
-	}
-}
-
-func (r *Client) Terrabox() *Terrabox {
-	q := r.query.Select("terrabox")
-
-	return &Terrabox{
 		query: q,
 	}
 }
@@ -6552,371 +6918,6 @@ func (r *Terminal) WebsocketEndpoint(ctx context.Context) (string, error) {
 
 	q = q.Bind(&response)
 	return response, q.Execute(ctx)
-}
-
-type Terrabox struct {
-	query *querybuilder.Selection
-
-	id *TerraboxID
-}
-
-func (r *Terrabox) WithGraphQLQuery(q *querybuilder.Selection) *Terrabox {
-	return &Terrabox{
-		query: q,
-	}
-}
-
-// A unique identifier for this Terrabox.
-func (r *Terrabox) ID(ctx context.Context) (TerraboxID, error) {
-	if r.id != nil {
-		return *r.id, nil
-	}
-	q := r.query.Select("id")
-
-	var response TerraboxID
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *Terrabox) XXX_GraphQLType() string {
-	return "Terrabox"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *Terrabox) XXX_GraphQLIDType() string {
-	return "TerraboxID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *Terrabox) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
-}
-
-func (r *Terrabox) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *Terrabox) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadTerraboxFromID(TerraboxID(id))
-	return nil
-}
-
-// TerraboxTerragruntOpts contains options for Terrabox.Terragrunt
-type TerraboxTerragruntOpts struct {
-	//
-	// The image to use which contain terragrunt ecosystem
-	//
-	Image string
-	//
-	// The version of the image to use
-	//
-	Version string
-}
-
-// Expose a terragrunt runtime
-func (r *Terrabox) Terragrunt(opts ...TerraboxTerragruntOpts) *TerraboxTf {
-	q := r.query.Select("terragrunt")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `image` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Image) {
-			q = q.Arg("image", opts[i].Image)
-		}
-		// `version` optional argument
-		if !querybuilder.IsZeroValue(opts[i].Version) {
-			q = q.Arg("version", opts[i].Version)
-		}
-	}
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-type TerraboxTf struct {
-	query *querybuilder.Selection
-
-	do *string
-	id *TerraboxTfID
-}
-type WithTerraboxTfFunc func(r *TerraboxTf) *TerraboxTf
-
-// With calls the provided function with current TerraboxTf.
-//
-// This is useful for reusability and readability by not breaking the calling chain.
-func (r *TerraboxTf) With(f WithTerraboxTfFunc) *TerraboxTf {
-	return f(r)
-}
-
-func (r *TerraboxTf) WithGraphQLQuery(q *querybuilder.Selection) *TerraboxTf {
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// TerraboxTfApplyOpts contains options for TerraboxTf.Apply
-type TerraboxTfApplyOpts struct {
-	//
-	// Define if we are executing the plan in destroy mode or not
-	//
-	DestroyMode bool
-}
-
-// Run an apply on a specific stack
-func (r *TerraboxTf) Apply(workDir string, opts ...TerraboxTfApplyOpts) *TerraboxTf {
-	q := r.query.Select("apply")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `destroyMode` optional argument
-		if !querybuilder.IsZeroValue(opts[i].DestroyMode) {
-			q = q.Arg("destroyMode", opts[i].DestroyMode)
-		}
-	}
-	q = q.Arg("workDir", workDir)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// expose the module catalog (only available for terragrunt)
-func (r *TerraboxTf) Catalog() *Terminal {
-	q := r.query.Select("catalog")
-
-	return &Terminal{
-		query: q,
-	}
-}
-
-// Expose the container
-func (r *TerraboxTf) Container() *Container {
-	q := r.query.Select("container")
-
-	return &Container{
-		query: q,
-	}
-}
-
-// Return the source directory
-func (r *TerraboxTf) Directory() *Directory {
-	q := r.query.Select("directory")
-
-	return &Directory{
-		query: q,
-	}
-}
-
-// Indicate to disable the the color in the output
-func (r *TerraboxTf) DisableColor() *TerraboxTf {
-	q := r.query.Select("disableColor")
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Execute the call chain
-func (r *TerraboxTf) Do(ctx context.Context) (string, error) {
-	if r.do != nil {
-		return *r.do, nil
-	}
-	q := r.query.Select("do")
-
-	var response string
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// Format the code
-func (r *TerraboxTf) Format(workDir string, check bool) *TerraboxTf {
-	q := r.query.Select("format")
-	q = q.Arg("workDir", workDir)
-	q = q.Arg("check", check)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// A unique identifier for this TerraboxTf.
-func (r *TerraboxTf) ID(ctx context.Context) (TerraboxTfID, error) {
-	if r.id != nil {
-		return *r.id, nil
-	}
-	q := r.query.Select("id")
-
-	var response TerraboxTfID
-
-	q = q.Bind(&response)
-	return response, q.Execute(ctx)
-}
-
-// XXX_GraphQLType is an internal function. It returns the native GraphQL type name
-func (r *TerraboxTf) XXX_GraphQLType() string {
-	return "TerraboxTf"
-}
-
-// XXX_GraphQLIDType is an internal function. It returns the native GraphQL type name for the ID of this object
-func (r *TerraboxTf) XXX_GraphQLIDType() string {
-	return "TerraboxTfID"
-}
-
-// XXX_GraphQLID is an internal function. It returns the underlying type ID
-func (r *TerraboxTf) XXX_GraphQLID(ctx context.Context) (string, error) {
-	id, err := r.ID(ctx)
-	if err != nil {
-		return "", err
-	}
-	return string(id), nil
-}
-
-func (r *TerraboxTf) MarshalJSON() ([]byte, error) {
-	id, err := r.ID(context.Background())
-	if err != nil {
-		return nil, err
-	}
-	return json.Marshal(id)
-}
-func (r *TerraboxTf) UnmarshalJSON(bs []byte) error {
-	var id string
-	err := json.Unmarshal(bs, &id)
-	if err != nil {
-		return err
-	}
-	*r = *dag.LoadTerraboxTfFromID(TerraboxTfID(id))
-	return nil
-}
-
-// Return the output of a specific stack
-func (r *TerraboxTf) Output(workDir string, isJson bool) *TerraboxTf {
-	q := r.query.Select("output")
-	q = q.Arg("workDir", workDir)
-	q = q.Arg("isJson", isJson)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// TerraboxTfPlanOpts contains options for TerraboxTf.Plan
-type TerraboxTfPlanOpts struct {
-	//
-	// Define if we are executing the plan in destroy mode or not
-	//
-	DestroyMode bool
-	//
-	// Define if the exit code is in detailed mode or not (0 - Succeeded, diff is empty (no changes) | 1 - Errored | 2 - Succeeded, there is a diff)
-	//
-	DetailedExitCode bool
-}
-
-// Run a plan on a specific stack
-func (r *TerraboxTf) Plan(workDir string, opts ...TerraboxTfPlanOpts) *TerraboxTf {
-	q := r.query.Select("plan")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `destroyMode` optional argument
-		if !querybuilder.IsZeroValue(opts[i].DestroyMode) {
-			q = q.Arg("destroyMode", opts[i].DestroyMode)
-		}
-		// `detailedExitCode` optional argument
-		if !querybuilder.IsZeroValue(opts[i].DetailedExitCode) {
-			q = q.Arg("detailedExitCode", opts[i].DetailedExitCode)
-		}
-	}
-	q = q.Arg("workDir", workDir)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Execute the run-all command (only available for terragrunt)
-func (r *TerraboxTf) RunAll(workDir string, cmd string) *TerraboxTf {
-	q := r.query.Select("runAll")
-	q = q.Arg("workDir", workDir)
-	q = q.Arg("cmd", cmd)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Open a shell
-func (r *TerraboxTf) Shell() *Terminal {
-	q := r.query.Select("shell")
-
-	return &Terminal{
-		query: q,
-	}
-}
-
-// TerraboxTfWithCacheBursterOpts contains options for TerraboxTf.WithCacheBurster
-type TerraboxTfWithCacheBursterOpts struct {
-	//
-	// Define if the cache burster level is done per day (daily), per hour (hour), per minute (minute), per second (default)
-	//
-	CacheBursterLevel string
-}
-
-func (r *TerraboxTf) WithCacheBurster(opts ...TerraboxTfWithCacheBursterOpts) *TerraboxTf {
-	q := r.query.Select("withCacheBurster")
-	for i := len(opts) - 1; i >= 0; i-- {
-		// `cacheBursterLevel` optional argument
-		if !querybuilder.IsZeroValue(opts[i].CacheBursterLevel) {
-			q = q.Arg("cacheBursterLevel", opts[i].CacheBursterLevel)
-		}
-	}
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Use a new container
-func (r *TerraboxTf) WithContainer(ctr *Container) *TerraboxTf {
-	assertNotNil("ctr", ctr)
-	q := r.query.Select("withContainer")
-	q = q.Arg("ctr", ctr)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Convert a dotfile format to secret environment variables in the container (could be use to configure providers)
-func (r *TerraboxTf) WithSecretDotEnv(dotEnv *Secret) *TerraboxTf {
-	assertNotNil("dotEnv", dotEnv)
-	q := r.query.Select("withSecretDotEnv")
-	q = q.Arg("dotEnv", dotEnv)
-
-	return &TerraboxTf{
-		query: q,
-	}
-}
-
-// Mount the source code at the given path
-func (r *TerraboxTf) WithSource(path string, src *Directory) *TerraboxTf {
-	assertNotNil("src", src)
-	q := r.query.Select("withSource")
-	q = q.Arg("path", path)
-	q = q.Arg("src", src)
-
-	return &TerraboxTf{
-		query: q,
-	}
 }
 
 // A definition of a parameter or return type in a Module.
