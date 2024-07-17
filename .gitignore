@@ -31,3 +31,9 @@ demo/
 .terraform
 .terragrunt-cache
 .terraform.lock.hcl
+
+# Dagger
+**/dagger.gen.go
+**/internal/dagger
+**/internal/querybuilder
+**/internal/telemetry
