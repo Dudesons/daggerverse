@@ -4,10 +4,11 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/sync/errgroup"
+	"main/internal/dagger"
 	"strings"
 )
 
-func (c *Ci) Node(ctx context.Context, testDataSrc *Directory) error {
+func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 	var eg errgroup.Group
 
 	eg.Go(func() error {
@@ -20,7 +21,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *Directory) error {
 			).
 			Pipeline(
 				ctx,
-				NodePipelineOpts{
+				dagger.NodePipelineOpts{
 					DryRun: true,
 					TTL:    "5m",
 					IsOci:  true,
@@ -43,7 +44,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *Directory) error {
 			Install().
 			Test().
 			Build().
-			OciBuild(ctx, nil, NodeOciBuildOpts{IsTTL: true, TTL: "5m"})
+			OciBuild(ctx, nil, dagger.NodeOciBuildOpts{IsTTL: true, TTL: "5m"})
 
 		fmt.Println("image: " + strings.Join(refs, "\n"))
 
@@ -60,7 +61,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *Directory) error {
 			).
 			Pipeline(
 				ctx,
-				NodePipelineOpts{
+				dagger.NodePipelineOpts{
 					DryRun:        true,
 					PackageDevTag: "beta",
 				},
@@ -80,7 +81,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *Directory) error {
 			Install().
 			Test().
 			Build().
-			Publish(NodePublishOpts{DryRun: true, DevTag: "beta"}).
+			Publish(dagger.NodePublishOpts{DryRun: true, DevTag: "beta"}).
 			Do(ctx)
 
 		return err

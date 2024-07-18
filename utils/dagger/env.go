@@ -3,10 +3,11 @@ package main
 import (
 	"bytes"
 	"context"
+	"dagger/utils/internal/dagger"
 	"github.com/joho/godotenv"
 )
 
-func (m *Utils) WithDotEnvSecret(ctx context.Context, ctr *Container, data *Secret) (*Container, error) {
+func (m *Utils) WithDotEnvSecret(ctx context.Context, ctr *dagger.Container, data *dagger.Secret) (*dagger.Container, error) {
 
 	clearData, err := data.Plaintext(ctx)
 	if err != nil {

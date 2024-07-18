@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"main/internal/dagger"
 )
 
 const (
@@ -14,7 +15,7 @@ type Node struct {
 	// +private
 	PipelineID string
 	// +private
-	Ctr *Container
+	Ctr *dagger.Container
 	// +private
 	Name string
 	// +private
@@ -30,7 +31,7 @@ type Node struct {
 	// +private
 	PkgMgr string
 	// +private
-	Platform Platform
+	Platform dagger.Platform
 	// +private
 	IsProduction bool
 	// +private
@@ -40,9 +41,9 @@ type Node struct {
 	// +private
 	NpmrcTokenName string
 	// +private
-	NpmrcToken *Secret
+	NpmrcToken *dagger.Secret
 	// +private
-	NpmrcFile *Secret
+	NpmrcFile *dagger.Secret
 	// +private
 	DistName string
 }

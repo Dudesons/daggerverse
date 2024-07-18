@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"main/internal/dagger"
 	"path/filepath"
 	"regexp"
 )
@@ -15,7 +16,7 @@ const (
 type analyzer struct {
 	PatternExclusions []string
 	PatternMatches    map[string]PatternMatch
-	dir               *Directory
+	dir               *dagger.Directory
 }
 
 type PatternMatch struct {
@@ -23,7 +24,7 @@ type PatternMatch struct {
 	Patterns []string
 }
 
-func newAnalyzer(dir *Directory, patternExclusions []string, patternMatches map[string]PatternMatch) (*analyzer, error) {
+func newAnalyzer(dir *dagger.Directory, patternExclusions []string, patternMatches map[string]PatternMatch) (*analyzer, error) {
 	if patternMatches == nil {
 		return nil, fmt.Errorf("pattern has to be set")
 	}

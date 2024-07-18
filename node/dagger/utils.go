@@ -1,12 +1,14 @@
 package main
 
+import "main/internal/dagger"
+
 // Return the current container state
-func (n *Node) Container() *Container {
+func (n *Node) Container() *dagger.Container {
 	return n.Ctr
 }
 
 // Return the current working directory
-func (n *Node) Directory() *Directory {
+func (n *Node) Directory() *dagger.Directory {
 	return n.Ctr.Directory(workdir)
 }
 
@@ -15,12 +17,12 @@ func (n *Node) Shell(
 	// The command to execute in the terminal
 	// +optional
 	cmd []string,
-) *Terminal {
+) *dagger.Container {
 	return n.Ctr.WithDefaultTerminalCmd(cmd).Terminal()
 }
 
 // Expose the container as a service
-func (n *Node) Serve() *Service {
+func (n *Node) Serve() *dagger.Service {
 	return n.Ctr.AsService()
 }
 

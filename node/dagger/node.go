@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
+	"main/internal/dagger"
 	"strconv"
 )
 
@@ -36,7 +37,7 @@ func (n *Node) WithNpmrcTokenEnv(
 	// The name of the environment variable where the npmrc token is stored
 	name string,
 	// The value of the token
-	value *Secret,
+	value *dagger.Secret,
 ) *Node {
 	n.NpmrcTokenName = name
 	n.NpmrcToken = value
@@ -48,7 +49,7 @@ func (n *Node) WithNpmrcTokenEnv(
 // Return the Node container with npmrc file
 func (n *Node) WithNpmrcTokenFile(
 	// The npmrc file to inject in the container
-	npmrcFile *Secret,
+	npmrcFile *dagger.Secret,
 ) *Node {
 	n.NpmrcFile = npmrcFile
 	n.Ctr = n.Ctr.WithMountedSecret(workdir+"/.npmrc", npmrcFile)
@@ -111,7 +112,7 @@ func (n *Node) WithYarn(
 // Return the Node container with the source code, 'node_modules' cache set up and workdir set
 func (n *Node) WithSource(
 	// The source code
-	src *Directory,
+	src *dagger.Directory,
 	// Indicate if the directory is mounted or persisted in the container
 	// +optional
 	persisted bool,
@@ -136,7 +137,7 @@ func (n *Node) WithSource(
 // Return the Node container with an additional file in the working dir
 func (n *Node) WithFile(
 	// The file to use
-	file *File,
+	file *dagger.File,
 	// The path where the file should be mounted
 	path string,
 	// Indicate if the file is mounted or persisted in the container
@@ -159,7 +160,7 @@ func (n *Node) WithFile(
 // Return the Node container with an additional directory in the working dir
 func (n *Node) WithDirectory(
 	// The directory to use
-	dir *Directory,
+	dir *dagger.Directory,
 	// The path where the directory should be mounted
 	path string,
 	// Indicate if the directory is mounted or persisted in the container
@@ -182,7 +183,7 @@ func (n *Node) WithDirectory(
 // Return the Node container with an additional cache volume in the working dir
 func (n *Node) WithCache(
 	// The cache volume to use
-	cache *CacheVolume,
+	cache *dagger.CacheVolume,
 	// The path where the cache volume should be mounted
 	path string,
 	// Indicate if the cache volume is mounted or persisted in the container

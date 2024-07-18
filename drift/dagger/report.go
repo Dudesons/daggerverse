@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"dagger/drift/internal/dagger"
 	"text/template"
 )
 
@@ -10,7 +11,7 @@ import (
 func (d *Drift) ReportToSlack(
 	ctx context.Context,
 	// The slack token to use
-	token *Secret,
+	token *dagger.Secret,
 	// The channel  id where the report will be posted
 	channelId string,
 	// Define the sidebar color of the message in slack
@@ -58,7 +59,7 @@ func (d *Drift) ReportToSlack(
 				"warning",
 				reportFormatted,
 				channelId,
-				NotifySlackSendMessageOpts{ThreadID: threadId},
+				dagger.NotifySlackSendMessageOpts{ThreadID: threadId},
 			)
 		if err != nil {
 			return err

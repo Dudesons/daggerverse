@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"dagger/mod-releaser/internal/dagger"
 	"fmt"
 	"regexp"
 	"slices"
@@ -96,13 +97,13 @@ func (m *ModReleaser) fetchTags(ctx context.Context) error {
 }
 
 // Allow to override the current container
-func (m *ModReleaser) WithContainer(ctr *Container) *ModReleaser {
+func (m *ModReleaser) WithContainer(ctr *dagger.Container) *ModReleaser {
 	m.Ctr = ctr
 
 	return m
 }
 
 // Open a shell
-func (m *ModReleaser) Shell() *Terminal {
+func (m *ModReleaser) Shell() *dagger.Container {
 	return m.Ctr.WithDefaultTerminalCmd(nil).Terminal()
 }

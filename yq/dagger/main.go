@@ -94,6 +94,6 @@ func (y *Yq) Container() *dagger.Container {
 }
 
 // Open a shell in the current container
-func (y *Yq) Shell() *Terminal {
+func (y *Yq) Shell() *dagger.Container {
 	return y.Ctr.Terminal()
 }

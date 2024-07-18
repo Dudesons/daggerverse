@@ -2,7 +2,10 @@
 
 package main
 
-import "context"
+import (
+	"context"
+	"main/internal/dagger"
+)
 
 type Autodetection struct{}
 
@@ -10,7 +13,7 @@ type Autodetection struct{}
 func (a *Autodetection) Node(
 	ctx context.Context,
 	// The path to the project to analyze
-	src *Directory,
+	src *dagger.Directory,
 	// Define patterns to exclude from the analysis
 	// +optional
 	patternExclusions []string,
@@ -22,7 +25,7 @@ func (a *Autodetection) Node(
 func (a *Autodetection) Oci(
 	ctx context.Context,
 	// The path to the project to analyze
-	src *Directory,
+	src *dagger.Directory,
 	// Define patterns to exclude from the analysis
 	// +optional
 	patternExclusions []string,

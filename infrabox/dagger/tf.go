@@ -10,7 +10,7 @@ import (
 
 type Tf struct {
 	// +private
-	Ctr *Container
+	Ctr *dagger.Container
 	// +private
 	Bin string
 	// +private
@@ -34,7 +34,7 @@ func newTf(
 }
 
 // Mount the source code at the given path
-func (t *Tf) WithSource(path string, src *Directory) *Tf {
+func (t *Tf) WithSource(path string, src *dagger.Directory) *Tf {
 	t.RootPath = path
 	t.Ctr = t.Ctr.
 		WithDirectory(path, src).
@@ -44,14 +44,14 @@ func (t *Tf) WithSource(path string, src *Directory) *Tf {
 }
 
 // Use a new container
-func (t *Tf) WithContainer(ctr *Container) *Tf {
+func (t *Tf) WithContainer(ctr *dagger.Container) *Tf {
 	t.Ctr = ctr
 
 	return t
 }
 
 // Convert a dotfile format to secret environment variables in the container (could be use to configure providers)
-func (t *Tf) WithSecretDotEnv(dotEnv *Secret) *Tf {
+func (t *Tf) WithSecretDotEnv(dotEnv *dagger.Secret) *Tf {
 	return t.WithContainer(dag.Utils().WithDotEnvSecret(t.Ctr, dotEnv))
 }
 
@@ -62,7 +62,7 @@ func (t *Tf) DisableColor() *Tf {
 }
 
 // Expose the container
-func (t *Tf) Container() *Container {
+func (t *Tf) Container() *dagger.Container {
 	return t.Ctr
 }
 
@@ -78,12 +78,12 @@ func (t *Tf) Do(ctx context.Context) (string, error) {
 }
 
 // Return the source directory
-func (t *Tf) Directory() *Directory {
+func (t *Tf) Directory() *dagger.Directory {
 	return t.Ctr.Directory(t.RootPath)
 }
 
 // Open a shell
-func (t *Tf) Shell() *Terminal {
+func (t *Tf) Shell() *dagger.Container {
 	return t.Ctr.WithDefaultTerminalCmd(nil).Terminal()
 }
 

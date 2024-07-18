@@ -4,6 +4,7 @@ package main
 
 import (
 	"context"
+	"dagger/mod-releaser/internal/dagger"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -14,7 +15,7 @@ const workingDir = "/opt/repo/"
 func New(
 	ctx context.Context,
 	// A git repository where the release process will be applied
-	gitRepo *Directory,
+	gitRepo *dagger.Directory,
 	// The module name to publish
 	component string,
 ) (*ModReleaser, error) {
@@ -57,7 +58,7 @@ type ModReleaser struct {
 	Tags []string
 	Tag  string
 	// +private
-	Ctr *Container
+	Ctr *dagger.Container
 	// +private
 	Component string
 }
@@ -66,7 +67,7 @@ type ModReleaser struct {
 func (m *ModReleaser) WithGitConfig(
 	// A path to a git config file to use
 	// +optional
-	cfg *File,
+	cfg *dagger.File,
 	// the email to use in the git config
 	// +optional
 	email string,
@@ -92,7 +93,7 @@ func (m *ModReleaser) WithGitConfig(
 // Mount ssh keys from the host
 func (m *ModReleaser) WithSshKeys(
 	// The directory with ssh keys to mount
-	src *Directory,
+	src *dagger.Directory,
 ) *ModReleaser {
 	return m.WithContainer(m.Ctr.WithDirectory("/root/.ssh", src))
 }
@@ -144,11 +145,11 @@ func (m *ModReleaser) Publish(
 		m.WithContainer(m.Ctr.WithExec([]string{"git", "push", "origin", m.Tag}))
 	}
 
-	return m.WithContainer(m.Ctr.WithExec([]string{"dagger", "publish", "-m", m.Component}, ContainerWithExecOpts{ExperimentalPrivilegedNesting: true}))
+	return m.WithContainer(m.Ctr.WithExec([]string{"dagger", "publish", "-m", m.Component}, dagger.ContainerWithExecOpts{ExperimentalPrivilegedNesting: true}))
 }
 
 // Return the git repository
-func (m *ModReleaser) Repository() *Directory {
+func (m *ModReleaser) Repository() *dagger.Directory {
 	return m.Ctr.Directory(workingDir)
 }
 

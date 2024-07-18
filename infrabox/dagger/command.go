@@ -97,8 +97,3 @@ func (t *Tf) Output(workDir string, isJson bool) *Tf {
 func (t *Tf) RunAll(workDir string, cmd string) *Tf {
 	return t.WithContainer(t.run(workDir, []string{"run-all", cmd}))
 }
-
-// expose the module catalog (only available for terragrunt)
-func (t *Tf) Catalog() *Terminal {
-	return t.Ctr.WithDefaultTerminalCmd([]string{t.Bin, "catalog"}).Terminal()
-}

@@ -8,6 +8,7 @@ import (
 	"context"
 	"fmt"
 	"google.golang.org/api/option"
+	"main/internal/dagger"
 	"regexp"
 )
 
@@ -26,8 +27,8 @@ func newGcpSecretManager() *GcpSecretManager {
 
 func (m *GcpSecretManager) withCredentials(
 	ctx context.Context,
-	filePath *File,
-	gcloudFolder *Directory,
+	filePath *dagger.File,
+	gcloudFolder *dagger.Directory,
 ) error {
 	syncFileToSandboxCtr := dag.Container().From("alpine:latest")
 
@@ -48,7 +49,7 @@ func (m *GcpSecretManager) withCredentials(
 	return err
 }
 
-func (m *GcpSecretManager) auth(ctx context.Context, filePath *File, gcloudFolder *Directory) error {
+func (m *GcpSecretManager) auth(ctx context.Context, filePath *dagger.File, gcloudFolder *dagger.Directory) error {
 	var gcpOptions []option.ClientOption
 
 	if filePath != nil || gcloudFolder != nil {
@@ -85,11 +86,11 @@ func (m *GcpSecretManager) GetSecret(
 	version string,
 	// The path to a credentials json file
 	// +optional
-	filePath *File,
+	filePath *dagger.File,
 	// The path to the gcloud folder
 	// +optional
-	gcloudFolder *Directory,
-) (*Secret, error) {
+	gcloudFolder *dagger.Directory,
+) (*dagger.Secret, error) {
 	err := m.auth(ctx, filePath, gcloudFolder)
 	if err != nil {
 		return nil, err
@@ -116,10 +117,10 @@ func (m *GcpSecretManager) SetSecret(
 	project string,
 	// The path to a credentials json file
 	// +optional
-	filePath *File,
+	filePath *dagger.File,
 	// The path to the gcloud folder
 	// +optional
-	gcloudFolder *Directory,
+	gcloudFolder *dagger.Directory,
 ) (string, error) {
 	notFoundRegexp, err := regexp.Compile("rpc error: code = NotFound desc = Secret \\[projects/\\w+/secrets/\\w+] not found")
 	if err != nil {

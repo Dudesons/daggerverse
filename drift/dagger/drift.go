@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"dagger/drift/internal/dagger"
 	"github.com/sourcegraph/conc/pool"
 	"text/template"
 	"time"
@@ -17,7 +18,7 @@ type report struct {
 func (d *Drift) Detection(
 	ctx context.Context,
 	// All the terraform/terragrunt code necessary in order to be able to run plan
-	src *Directory,
+	src *dagger.Directory,
 	// The root path where stack are living
 	stackRootPath string,
 	// The number of execution in parallel we want to have, 0 mean no limit
@@ -29,7 +30,7 @@ func (d *Drift) Detection(
 ) (*Drift, error) {
 	d.RootStacksPath = stackRootPath
 	d.StartTime = time.Now().Format("2006-01-02 3:4:5 PM")
-	stacks, err := src.Entries(ctx, DirectoryEntriesOpts{Path: stackRootPath})
+	stacks, err := src.Entries(ctx, dagger.DirectoryEntriesOpts{Path: stackRootPath})
 	if err != nil {
 		return nil, err
 	}
@@ -60,8 +61,8 @@ func (d *Drift) Detection(
 				Terragrunt().
 				WithSource(d.MountPoint, src).
 				DisableColor().
-				WithCacheBurster(InfraboxTfWithCacheBursterOpts{CacheBursterLevel: cacheBursterLevel}).
-				Plan(d.MountPoint+"/"+d.RootStacksPath+"/"+internalStackName, InfraboxTfPlanOpts{DetailedExitCode: true}).
+				WithCacheBurster(dagger.InfraboxTfWithCacheBursterOpts{CacheBursterLevel: cacheBursterLevel}).
+				Plan(d.MountPoint+"/"+d.RootStacksPath+"/"+internalStackName, dagger.InfraboxTfPlanOpts{DetailedExitCode: true}).
 				Do(ctx)
 			if err != nil {
 				reportChan <- report{StackName: internalStackName, DriftContent: err.Error()}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"golang.org/x/exp/maps"
+	"main/internal/dagger"
 	"os"
 	"regexp"
 	"slices"
@@ -67,7 +68,7 @@ type NodeAnalyzer struct {
 	PkgJsonRep string
 }
 
-func newNodeAnalyzer(ctx context.Context, dir *Directory, patternExclusions []string) (*NodeAnalyzer, error) {
+func newNodeAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string) (*NodeAnalyzer, error) {
 	anlzr, err := newAnalyzer(
 		dir,
 		append(patternExclusions, defaultNodeExclude...),

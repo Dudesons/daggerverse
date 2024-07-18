@@ -11,7 +11,7 @@ func (n *Node) WithAutoSetup(
 	// A name to use in the pipeline and injected in cache keys
 	pipelineId string,
 	// The code to mount in the node container
-	src *Directory,
+	src *dagger.Directory,
 	// Patterns to exclude in the analysis for the auto-detection
 	// +optional
 	patternExclusions []string,
@@ -26,7 +26,7 @@ func (n *Node) WithAutoSetup(
 	// Container options
 	// +optional
 	// +default="linux/amd64"
-	containerPlatform Platform,
+	containerPlatform dagger.Platform,
 	// Indicate attempted system package to install
 	// +optional
 	systemSetupCmds [][]string,

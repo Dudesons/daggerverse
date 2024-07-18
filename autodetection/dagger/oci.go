@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"main/internal/dagger"
 	"slices"
 )
 
@@ -18,7 +19,7 @@ type OciAnalyzer struct {
 	Matches []string
 }
 
-func newOciAnalyzer(ctx context.Context, dir *Directory, patternExclusions []string) (*OciAnalyzer, error) {
+func newOciAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string) (*OciAnalyzer, error) {
 	anlzr, err := newAnalyzer(
 		dir,
 		patternExclusions,

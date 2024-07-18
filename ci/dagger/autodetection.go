@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"golang.org/x/sync/errgroup"
+	"main/internal/dagger"
 )
 
-func (c *Ci) Autodetection(ctx context.Context, testDataSrc *Directory) error {
+func (c *Ci) Autodetection(ctx context.Context, testDataSrc *dagger.Directory) error {
 	var eg errgroup.Group
 
 	eg.Go(func() error {
