@@ -47,11 +47,14 @@ func (y *Yq) Set(
 	yamlFilePath string,
 ) *Yq {
 	y.Ctr = y.Ctr.
-		WithExec([]string{
-			"-i",
-			expr,
-			defaultPath + yamlFilePath,
-		})
+		WithExec(
+			[]string{
+				"-i",
+				expr,
+				defaultPath + yamlFilePath,
+			},
+			dagger.ContainerWithExecOpts{UseEntrypoint: true},
+		)
 
 	return y
 }
@@ -65,10 +68,12 @@ func (y *Yq) Get(
 	yamlFilePath string,
 ) (string, error) {
 	val, err := y.Ctr.
-		WithExec([]string{
-			expr,
-			defaultPath + yamlFilePath,
-		}).
+		WithExec(
+			[]string{
+				expr,
+				defaultPath + yamlFilePath,
+			},
+			dagger.ContainerWithExecOpts{UseEntrypoint: true}).
 		Stdout(ctx)
 
 	return strings.TrimSuffix(val, "\n"), err
