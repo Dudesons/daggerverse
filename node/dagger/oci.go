@@ -114,7 +114,7 @@ func (n *Node) OciBuild(
 	productionBuild = productionBuild.
 		SetupSystem(nil).
 		Production().
-		WithPackageManager(n.PkgMgr, true).
+		WithPackageManager(n.PkgMgr, true, n.PkgMgrVersion).
 		Install()
 
 	for _, registry := range registries {

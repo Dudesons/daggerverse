@@ -96,6 +96,8 @@ func (n *Node) WithNpm(
 	}
 
 	if version != "" {
+		n.PkgMgrVersion = version
+
 		n.Ctr = n.
 			Ctr.
 			WithExec([]string{"npm", "install", "-g", "npm@" + version})
@@ -122,6 +124,8 @@ func (n *Node) WithYarn(
 	}
 
 	if version != "" {
+		n.PkgMgrVersion = version
+
 		n.Ctr = n.
 			Ctr.
 			WithExec([]string{"yarn", "set", "version", version})
