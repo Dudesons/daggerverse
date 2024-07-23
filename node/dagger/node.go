@@ -64,14 +64,17 @@ func (n *Node) WithPackageManager(
 	// Disable mounting cache volumes.
 	// +optional
 	disableCache bool,
+	// Define a specific version of the package manager.
+	// +optional
+	version string,
 ) *Node {
 	switch packageManager {
 	case "npm":
-		return n.WithNpm(disableCache)
+		return n.WithNpm(disableCache, version)
 	case "yarn":
-		return n.WithYarn(disableCache)
+		return n.WithYarn(disableCache, version)
 	default:
-		return n.WithNpm(disableCache)
+		return n.WithNpm(disableCache, version)
 	}
 }
 
@@ -80,6 +83,9 @@ func (n *Node) WithNpm(
 	// Disable mounting cache volumes.
 	// +optional
 	disableCache bool,
+	// Define a specific version of npm.
+	// +optional
+	version string,
 ) *Node {
 	n.PkgMgr = "npm"
 
@@ -87,6 +93,12 @@ func (n *Node) WithNpm(
 		n.Ctr = n.
 			Ctr.
 			WithMountedCache("/root/.npm", dag.CacheVolume(n.getCacheKey("global-npm-cache")))
+	}
+
+	if version != "" {
+		n.Ctr = n.
+			Ctr.
+			WithExec([]string{"npm", "install", "-g", "npm@" + version})
 	}
 
 	return n
@@ -97,6 +109,9 @@ func (n *Node) WithYarn(
 	// Disable mounting cache volumes.
 	// +optional
 	disableCache bool,
+	// Define a specific version of npm.
+	// +optional
+	version string,
 ) *Node {
 	n.PkgMgr = "yarn"
 
@@ -104,6 +119,12 @@ func (n *Node) WithYarn(
 		n.Ctr = n.
 			Ctr.
 			WithMountedCache("/usr/local/share/.cache/yarn", dag.CacheVolume(n.getCacheKey("global-yarn-cache")))
+	}
+
+	if version != "" {
+		n.Ctr = n.
+			Ctr.
+			WithExec([]string{"yarn", "set", "version", version})
 	}
 
 	return n

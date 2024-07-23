@@ -30,6 +30,9 @@ func (n *Node) WithAutoSetup(
 	// Indicate attempted system package to install
 	// +optional
 	systemSetupCmds [][]string,
+	// Define a specific version of the package manager.
+	// +optional
+	packageManagerVersion string,
 ) (*Node, error) {
 	var err error
 	nodeAutoSetup := &Node{
@@ -87,7 +90,7 @@ func (n *Node) WithAutoSetup(
 	nodeAutoSetup = nodeAutoSetup.
 		WithVersion(image, engineVersion, isAlpine).
 		WithSource(src, false).
-		WithPackageManager(n.PkgMgr, false)
+		WithPackageManager(n.PkgMgr, false, packageManagerVersion)
 
 	appVersion, err := nodeAnalyzer.GetVersion(ctx)
 	if err != nil {
