@@ -3,13 +3,14 @@
 package main
 
 import (
-	secretmanager "cloud.google.com/go/secretmanager/apiv1"
-	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
 	"context"
 	"fmt"
-	"google.golang.org/api/option"
 	"main/internal/dagger"
 	"regexp"
+
+	secretmanager "cloud.google.com/go/secretmanager/apiv1"
+	"cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+	"google.golang.org/api/option"
 )
 
 const (
@@ -60,7 +61,7 @@ func (m *GcpSecretManager) auth(ctx context.Context, filePath *dagger.File, gclo
 	}
 
 	if filePath != nil {
-		gcpOptions = append(gcpOptions, option.WithCredentialsFile(gcpCredentialsGcloudPath))
+		gcpOptions = append(gcpOptions, option.WithCredentialsFile(gcpCredentialsFilePath))
 	}
 
 	client, err := secretmanager.NewClient(ctx, gcpOptions...)
