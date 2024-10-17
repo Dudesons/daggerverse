@@ -10,9 +10,9 @@ import (
 func (c *Ci) Yq(ctx context.Context, testDataSrc *dagger.Directory) error {
 	var eg errgroup.Group
 
+	//Read a key
 	eg.Go(func() error {
 		val, err := dag.
-			Pipeline("Read a key").
 			Yq(testDataSrc).
 			Get(ctx, ".foo.bar", "test.yaml")
 		if err != nil {

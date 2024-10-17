@@ -12,7 +12,6 @@ func (c *Ci) Autodetection(ctx context.Context, testDataSrc *dagger.Directory) e
 
 	eg.Go(func() error {
 		nodeAnalyzer := dag.
-			Pipeline("Analyze myapi").
 			Autodetection().
 			Node(testDataSrc.Directory("myapi"))
 
