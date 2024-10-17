@@ -33,9 +33,9 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 		return err
 	})
 
+	//Explicit mode pipeline with oci build
 	eg.Go(func() error {
 		refs, err := dag.
-			Pipeline("Explicit mode pipeline with oci build").
 			Node().
 			WithPipelineID("testdata-myapi").
 			WithVersion("20.9.0").
@@ -51,9 +51,9 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 		return err
 	})
 
+	//Lazy mode pipeline with package build
 	eg.Go(func() error {
 		_, err := dag.
-			Pipeline("Lazy mode pipeline with package build").
 			Node().
 			WithAutoSetup(
 				"testdata-lib",
@@ -70,9 +70,9 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 		return err
 	})
 
+	// Explicit mode pipeline with package build
 	eg.Go(func() error {
 		_, err := dag.
-			Pipeline("Explicit mode pipeline with package build").
 			Node().
 			WithPipelineID("testdata-mylib").
 			WithVersion("20.9.0").

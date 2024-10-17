@@ -1,7 +1,6 @@
 # Secret manager
 
 [Daggerverse](https://daggerverse.dev/mod/github.com/Dudesons/daggerverse/node)
-![Dagger Version](https://img.shields.io/badge/dagger%20version-%3E=0.10.2-0f0f19.svg?style=flat-square)
 
 A secret manager module which allow to work with different backends
 
@@ -10,7 +9,9 @@ A secret manager module which allow to work with different backends
 * Gcp secret manager
   * Read secret
   * Create/update secret
-
+* Aws secret manager
+  * Read secret
+  * Create/update secret
 
 ## Examples
 
@@ -23,7 +24,6 @@ dagger call -m github.com/Dudesons/daggerverse/secret-manager \
 
 ## To Do
 
-- [ ] Add aws secret manager
 - [ ] Add vault
 - [ ] Add sops
 - [ ] Improve documentation
