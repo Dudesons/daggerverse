@@ -31,6 +31,8 @@ type Node struct {
 	// +private
 	PkgMgr string
 	// +private
+	Workspaces []string
+	// +private
 	PkgMgrVersion string
 	// +private
 	Platform dagger.Platform
