@@ -33,6 +33,9 @@ func (n *Node) WithAutoSetup(
 	// Define a specific version of the package manager.
 	// +optional
 	packageManagerVersion string,
+	// Node workspaces to use during the pipeline
+	// +optional
+	workspaces []string,
 ) (*Node, error) {
 	var err error
 	nodeAutoSetup := &Node{
@@ -40,6 +43,7 @@ func (n *Node) WithAutoSetup(
 		PkgMgr:          "npm",
 		Platform:        containerPlatform,
 		SystemSetupCmds: systemSetupCmds,
+		Workspaces:      workspaces,
 		Ctr: dag.
 			Container(dagger.ContainerOpts{
 				Platform: containerPlatform,
