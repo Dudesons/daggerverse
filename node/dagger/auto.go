@@ -41,7 +41,6 @@ func (n *Node) WithAutoSetup(
 		Platform:        containerPlatform,
 		SystemSetupCmds: systemSetupCmds,
 		Ctr: dag.
-			Pipeline(pipelineId).
 			Container(dagger.ContainerOpts{
 				Platform: containerPlatform,
 			}),

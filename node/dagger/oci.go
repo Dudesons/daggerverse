@@ -53,7 +53,6 @@ func (n *Node) OciBuild(
 		SystemSetupCmds: n.SystemSetupCmds,
 		DistName:        n.DistName,
 		Ctr: dag.
-			Pipeline(n.PipelineID + "oci-build").
 			Container(dagger.ContainerOpts{
 				Platform: n.Platform,
 			}),
