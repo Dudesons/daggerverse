@@ -287,6 +287,7 @@ func (n *Node) Run(
 		}
 	}
 
+	baseCommand = append(baseCommand, "run")
 	n.Ctr = n.
 		Ctr.
 		WithExec(append(baseCommand, command...))
