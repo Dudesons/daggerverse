@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"main/internal/dagger"
+	"strings"
 )
 
 // Allow to let the pipeline to be setup automatically based on the package.json aka lazy mode
@@ -33,6 +34,9 @@ func (n *Node) WithAutoSetup(
 	// Define a specific version of the package manager.
 	// +optional
 	packageManagerVersion string,
+	// Node workspaces to use during the pipeline
+	// +optional
+	workspaces []string,
 ) (*Node, error) {
 	var err error
 	nodeAutoSetup := &Node{
@@ -40,8 +44,8 @@ func (n *Node) WithAutoSetup(
 		PkgMgr:          "npm",
 		Platform:        containerPlatform,
 		SystemSetupCmds: systemSetupCmds,
+		Workspaces:      workspaces,
 		Ctr: dag.
-			Pipeline(pipelineId).
 			Container(dagger.ContainerOpts{
 				Platform: containerPlatform,
 			}),
@@ -87,11 +91,6 @@ func (n *Node) WithAutoSetup(
 		nodeAutoSetup.PkgMgr = "yarn"
 	}
 
-	nodeAutoSetup = nodeAutoSetup.
-		WithVersion(image, engineVersion, isAlpine).
-		WithSource(src, false).
-		WithPackageManager(n.PkgMgr, false, packageManagerVersion)
-
 	appVersion, err := nodeAnalyzer.GetVersion(ctx)
 	if err != nil {
 		return nil, err
@@ -119,5 +118,17 @@ func (n *Node) WithAutoSetup(
 		return nil, err
 	}
 
-	return nodeAutoSetup, nil
+	rootWorkspacePaths, err := nodeAnalyzer.GetWorkspaces(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, i := range rootWorkspacePaths {
+		nodeAutoSetup.RootWorkspacePaths = append(nodeAutoSetup.RootWorkspacePaths, strings.ReplaceAll(i, "*", ""))
+	}
+
+	return nodeAutoSetup.
+			WithVersion(image, engineVersion, isAlpine).
+			WithSource(src, false).
+			WithPackageManager(n.PkgMgr, false, packageManagerVersion),
+		nil
 }

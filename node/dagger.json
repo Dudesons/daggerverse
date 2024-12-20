@@ -1,5 +1,6 @@
 {
   "name": "node",
+  "engineVersion": "v0.15.1",
   "sdk": "go",
   "dependencies": [
     {
@@ -7,6 +8,5 @@
       "source": "../autodetection"
     }
   ],
-  "source": "dagger",
-  "engineVersion": "v0.12.2"
+  "source": "dagger"
 }

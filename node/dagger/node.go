@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"main/internal/dagger"
+	"path/filepath"
 	"strconv"
 )
 
@@ -145,16 +146,26 @@ func (n *Node) WithSource(
 	if persisted {
 		n.Ctr = n.
 			Ctr.
-			WithDirectory(workdir, src).
-			WithWorkdir(workdir)
+			WithDirectory(workdir, src)
+
 	} else {
 		n.Ctr = n.
 			Ctr.
-			WithMountedDirectory(workdir, src).
-			WithMountedCache(workdir+"/node_modules", dag.CacheVolume(n.getCacheKey("node-modules")))
+			WithMountedDirectory(workdir, src)
 	}
 
-	n.Ctr = n.Ctr.WithWorkdir(workdir)
+	for _, rootPath := range n.RootWorkspacePaths {
+		for _, workspace := range n.Workspaces {
+			n.Ctr = n.
+				Ctr.
+				WithMountedCache(filepath.Clean(workdir+"/"+rootPath+"/"+workspace+"/node_modules"), dag.CacheVolume(n.getCacheKey(rootPath+"-"+workspace+"-node-modules")))
+		}
+	}
+
+	n.Ctr = n.
+		Ctr.
+		WithMountedCache(workdir+"/node_modules", dag.CacheVolume(n.getCacheKey("node-modules"))).
+		WithWorkdir(workdir)
 
 	return n
 }
@@ -241,14 +252,56 @@ func (n *Node) Production() *Node {
 	return n
 }
 
+// Prepare the command to inject workspaces
+func (n *Node) WithWorkspace(workspace string) *Node {
+	if n.Workspaces == nil {
+		n.Workspaces = []string{}
+	}
+
+	n.Workspaces = append(n.Workspaces, workspace)
+	return n
+}
+
+func (n *Node) prepareWorkspaceNpmOption() []string {
+	options := []string{}
+	for _, i := range n.Workspaces {
+		options = append(options, "--workspace="+i)
+	}
+
+	return options
+}
+
+func (n *Node) prepareWorkspaceYarnOption() []string {
+	options := []string{}
+	for _, i := range n.Workspaces {
+		options = append(options, []string{"workspace", i}...)
+	}
+
+	return options
+}
+
 // Execute a command from the package.json
 func (n *Node) Run(
 	// Command from the package.json to run
 	command []string,
 ) *Node {
+	baseCommand := []string{n.PkgMgr}
+
+	if n.Workspaces != nil {
+		switch n.PkgMgr {
+		case "npm":
+			baseCommand = append(baseCommand, n.prepareWorkspaceNpmOption()...)
+		case "yarn":
+			baseCommand = append(baseCommand, n.prepareWorkspaceYarnOption()...)
+		default:
+			baseCommand = append(baseCommand, n.prepareWorkspaceNpmOption()...)
+		}
+	}
+
+	baseCommand = append(baseCommand, "run")
 	n.Ctr = n.
 		Ctr.
-		WithExec(append([]string{n.PkgMgr, "run"}, command...))
+		WithExec(append(baseCommand, command...))
 	return n
 }
 

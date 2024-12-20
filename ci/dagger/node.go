@@ -11,9 +11,9 @@ import (
 func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 	var eg errgroup.Group
 
+	// Lazy mode pipeline with oci build
 	eg.Go(func() error {
 		refs, err := dag.
-			Pipeline("Lazy mode pipeline with oci build").
 			Node().
 			WithAutoSetup(
 				"testdata-myapi",
@@ -33,7 +33,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 		return err
 	})
 
-	//Explicit mode pipeline with oci build
+	// Explicit mode pipeline with oci build
 	eg.Go(func() error {
 		refs, err := dag.
 			Node().

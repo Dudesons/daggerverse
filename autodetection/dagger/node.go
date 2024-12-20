@@ -42,6 +42,7 @@ type packageJson struct {
 	Name            string            `json:"name"`
 	Version         string            `json:"version"`
 	Description     string            `json:"description"`
+	Workspaces      []string          `json:"workspaces"`
 	Scripts         map[string]string `json:"scripts,omitempty"`
 	Dependencies    map[string]string `json:"dependencies"`
 	DevDependencies map[string]string `json:"devDependencies"`
@@ -178,4 +179,13 @@ func (n *NodeAnalyzer) GetScriptNames() ([]string, error) {
 	}
 
 	return maps.Keys(info.Scripts), nil
+}
+
+func (n *NodeAnalyzer) GetWorkspaces() ([]string, error) {
+	info, err := n.toPkgJson()
+	if err != nil {
+		return nil, err
+	}
+
+	return info.Workspaces, nil
 }
