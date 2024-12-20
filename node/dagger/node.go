@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"main/internal/dagger"
+	"path/filepath"
 	"strconv"
 )
 
@@ -157,7 +158,7 @@ func (n *Node) WithSource(
 		for _, workspace := range n.Workspaces {
 			n.Ctr = n.
 				Ctr.
-				WithMountedCache(workdir+"/"+rootPath+"/"+workspace+"/+node_modules", dag.CacheVolume(n.getCacheKey(rootPath+"-"+workspace+"-node-modules")))
+				WithMountedCache(filepath.Clean(workdir+"/"+rootPath+"/"+workspace+"/node_modules"), dag.CacheVolume(n.getCacheKey(rootPath+"-"+workspace+"-node-modules")))
 		}
 	}
 
