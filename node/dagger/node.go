@@ -145,16 +145,26 @@ func (n *Node) WithSource(
 	if persisted {
 		n.Ctr = n.
 			Ctr.
-			WithDirectory(workdir, src).
-			WithWorkdir(workdir)
+			WithDirectory(workdir, src)
+
 	} else {
 		n.Ctr = n.
 			Ctr.
-			WithMountedDirectory(workdir, src).
-			WithMountedCache(workdir+"/node_modules", dag.CacheVolume(n.getCacheKey("node-modules")))
+			WithMountedDirectory(workdir, src)
 	}
 
-	n.Ctr = n.Ctr.WithWorkdir(workdir)
+	for _, rootPath := range n.RootWorkspacePaths {
+		for _, workspace := range n.Workspaces {
+			n.Ctr = n.
+				Ctr.
+				WithMountedCache(workdir+"/"+rootPath+"/"+workspace+"/+node_modules", dag.CacheVolume(n.getCacheKey(rootPath+"-"+workspace+"-node-modules")))
+		}
+	}
+
+	n.Ctr = n.
+		Ctr.
+		WithMountedCache(workdir+"/node_modules", dag.CacheVolume(n.getCacheKey("node-modules"))).
+		WithWorkdir(workdir)
 
 	return n
 }
