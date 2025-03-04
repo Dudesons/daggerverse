@@ -1,12 +1,14 @@
 {
   "name": "infrabox",
-  "sdk": "go",
+  "engineVersion": "v0.16.2",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "utils",
       "source": "../utils"
     }
   ],
-  "source": "dagger",
-  "engineVersion": "v0.13.5"
+  "source": "dagger"
 }

@@ -17,6 +17,8 @@ type Tf struct {
 	RootPath string
 	// +private
 	NoColor bool
+	// Content of the terraform plan
+	TfPlan *dagger.File
 }
 
 func newTf(
@@ -111,4 +113,13 @@ func (t *Tf) WithCacheBurster(
 	}
 
 	return t.WithContainer(t.Ctr.WithEnvVariable("CACHE_BURSTER", cacheBursterKey))
+}
+
+// Define the cache buster strategy
+func (t *Tf) WithTfPlan(
+	// A terraform plan file to apply
+	planFile *dagger.File,
+) *Tf {
+	t.TfPlan = planFile
+	return t
 }
