@@ -113,11 +113,10 @@ func (t *Tf) Output(workDir string, isJson bool) *Tf {
 
 // Run a show on a specific state or plan file
 func (t *Tf) Show(
-	// Define if the output is in machine-readableform
+	// Define if the output is in machine-readable form
 	// +optional
 	ojson bool,
 	// Define a path to a plan file or state
-	// +optional
 	path string,
 ) *Tf {
 	cmd := []string{"show"}
@@ -131,11 +130,11 @@ func (t *Tf) Show(
 	}
 
 	if t.TfPlan != nil {
-		t.WithContainer(t.Ctr.WithFile("/tfplan", t.TfPlan))
-		cmd = append(cmd, "/tfplan")
+		t.WithContainer(t.Ctr.WithFile(path+"/tfplan", t.TfPlan))
+		cmd = append(cmd, "tfplan")
 	}
 
-	return t.WithContainer(t.run("/", cmd))
+	return t.WithContainer(t.run(path, cmd))
 }
 
 // Execute the run-all command (only available for terragrunt)
