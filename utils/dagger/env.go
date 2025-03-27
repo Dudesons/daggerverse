@@ -20,7 +20,7 @@ func (m *Utils) WithDotEnvSecret(ctx context.Context, ctr *dagger.Container, dat
 	}
 
 	for k, v := range d {
-		ctr = ctr.WithSecretVariable(k, dag.Secret(v))
+		ctr = ctr.WithSecretVariable(k, dag.SetSecret(k, v))
 	}
 
 	return ctr, nil
