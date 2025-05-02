@@ -1,6 +1,8 @@
 {
   "name": "secret-manager",
-  "sdk": "go",
-  "source": "dagger",
-  "engineVersion": "v0.13.5"
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
+  "source": "dagger"
 }

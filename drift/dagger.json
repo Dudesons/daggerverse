@@ -1,6 +1,9 @@
 {
   "name": "drift",
-  "sdk": "go",
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "infrabox",
@@ -8,9 +11,9 @@
     },
     {
       "name": "notify",
-      "source": "github.com/gerhard/daggerverse/notify@4ad0f0317fd57c41001b48c5a9a3a49d39e43210"
+      "source": "github.com/gerhard/daggerverse/notify@4ad0f0317fd57c41001b48c5a9a3a49d39e43210",
+      "pin": "4ad0f0317fd57c41001b48c5a9a3a49d39e43210"
     }
   ],
-  "source": "dagger",
-  "engineVersion": "v0.13.5"
+  "source": "dagger"
 }
