@@ -17,19 +17,30 @@ type Tf struct {
 	RootPath string
 	// +private
 	NoColor bool
+	// Content of the terraform plan
+	TfPlan *dagger.File
 }
 
 func newTf(
 	image string,
 	version string,
 	binary string,
+	ctr *dagger.Container,
 ) *Tf {
+
+	if ctr == nil {
+		ctr = dag.
+			Container().
+			From(image + ":" + version)
+	}
+
 	return &Tf{
 		Bin: binary,
-		Ctr: dag.
-			Container().
-			From(image+":"+version).
-			WithMountedCache("/root/.terraform.d/plugin-cache", dag.CacheVolume("terraform-plugins")),
+		Ctr: ctr.
+			WithMountedCache(
+				"/root/.terraform.d/plugin-cache",
+				dag.CacheVolume("terraform-plugins"),
+			),
 	}
 }
 
@@ -111,4 +122,13 @@ func (t *Tf) WithCacheBurster(
 	}
 
 	return t.WithContainer(t.Ctr.WithEnvVariable("CACHE_BURSTER", cacheBursterKey))
+}
+
+// Define the cache buster strategy
+func (t *Tf) WithTfPlan(
+	// A terraform plan file to apply
+	planFile *dagger.File,
+) *Tf {
+	t.TfPlan = planFile
+	return t
 }

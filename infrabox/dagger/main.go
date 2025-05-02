@@ -2,6 +2,8 @@
 
 package main
 
+import "dagger/terrabox/internal/dagger"
+
 type Infrabox struct{}
 
 // Expose a terragrunt runtime
@@ -14,6 +16,9 @@ func (m *Infrabox) Terragrunt(
 	// +optional
 	// +default="1.7.4"
 	version string,
+	// A container to use as a base
+	// +optional
+	ctr *dagger.Container,
 ) *Tf {
-	return newTf(image, version, "terragrunt")
+	return newTf(image, version, "terragrunt", ctr)
 }

@@ -87,12 +87,13 @@ func (m *AwsSecretManager) auth(ctx context.Context) error {
 		config.Credentials = credentials.NewStaticCredentials(m.AccessKey, m.SecretKey, "")
 	}
 
-	sessionOpts := session.Options{}
+	sessionOpts := session.Options{
+		Config: *config,
+	}
+
 	if m.Profile != "" {
 		sessionOpts.Profile = m.Profile
 		sessionOpts.SharedConfigState = session.SharedConfigEnable
-	} else {
-		sessionOpts.Config = *config
 	}
 
 	sess, err := session.NewSessionWithOptions(sessionOpts)

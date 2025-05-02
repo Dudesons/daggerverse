@@ -1,7 +1,9 @@
 {
   "name": "node",
-  "engineVersion": "v0.15.1",
-  "sdk": "go",
+  "engineVersion": "v0.18.5",
+  "sdk": {
+    "source": "go"
+  },
   "dependencies": [
     {
       "name": "autodetection",
