@@ -19,15 +19,14 @@ const (
 )
 
 type GcpSecretManager struct {
-	secretManagerClient *secretmanager.Client
-	// Used to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
-	// +optional
-	// +default="alpine:latest"
+	// +private
 	InternalImage string
+
+	secretManagerClient *secretmanager.Client
 }
 
-func newGcpSecretManager() *GcpSecretManager {
-	return &GcpSecretManager{}
+func newGcpSecretManager(internalImage string) *GcpSecretManager {
+	return &GcpSecretManager{InternalImage: internalImage}
 }
 
 func (m *GcpSecretManager) withCredentials(

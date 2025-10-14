@@ -31,8 +31,8 @@ type AwsSecretManager struct {
 	InternalImage string
 }
 
-func newAwsSecretManager() *AwsSecretManager {
-	return &AwsSecretManager{InternalImage: "alpine:latest"}
+func newAwsSecretManager(internalImage string) *AwsSecretManager {
+	return &AwsSecretManager{InternalImage: internalImage}
 }
 
 // Authenticate to AWS using access and secret key
@@ -63,13 +63,6 @@ func (m *AwsSecretManager) WithRegion(name string) *AwsSecretManager {
 
 func (m *AwsSecretManager) WithProfile(name string) *AwsSecretManager {
 	m.Profile = name
-
-	return m
-}
-
-// Used to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
-func (m *AwsSecretManager) WithInternalImage(name string) *AwsSecretManager {
-	m.InternalImage = name
 
 	return m
 }

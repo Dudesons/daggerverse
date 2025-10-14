@@ -37,6 +37,10 @@ func (n *Node) WithAutoSetup(
 	// Node workspaces to use during the pipeline
 	// +optional
 	workspaces []string,
+	// Used for autodiscovery to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
+	// +optional
+	// +default="alpine:latest"
+	internalImage string,
 ) (*Node, error) {
 	var err error
 	nodeAutoSetup := &Node{
@@ -60,6 +64,7 @@ func (n *Node) WithAutoSetup(
 					[]string{"node_modules"},
 					patternExclusions...,
 				),
+				InternalImage: internalImage,
 			},
 		)
 	n.DetectOci, err = dag.
@@ -71,6 +76,7 @@ func (n *Node) WithAutoSetup(
 					[]string{"node_modules"},
 					patternExclusions...,
 				),
+				InternalImage: internalImage,
 			},
 		).
 		IsOci(ctx)
