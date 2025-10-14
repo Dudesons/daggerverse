@@ -144,6 +144,10 @@ func (n *NodeAnalyzer) GetEngineVersion() (string, error) {
 		return "", err
 	}
 
+	if info.Engines == nil {
+		return "", fmt.Errorf("no engines found, more details: https://docs.npmjs.com/cli/v7/configuring-npm/package-json#engines")
+	}
+
 	nodeEngineVersion := regexp.
 		MustCompile(`(\d+\.\d+\.\d+)`).
 		FindStringSubmatch(info.Engines.Node)
