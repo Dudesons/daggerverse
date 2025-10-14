@@ -19,7 +19,7 @@ type OciAnalyzer struct {
 	Matches []string
 }
 
-func newOciAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string) (*OciAnalyzer, error) {
+func newOciAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string, internalImage string) (*OciAnalyzer, error) {
 	anlzr, err := newAnalyzer(
 		dir,
 		patternExclusions,
@@ -29,7 +29,7 @@ func newOciAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusion
 		return nil, err
 	}
 
-	err = anlzr.run(ctx)
+	err = anlzr.run(ctx, internalImage)
 	if err != nil {
 		return nil, err
 	}

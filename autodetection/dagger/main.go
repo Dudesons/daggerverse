@@ -7,7 +7,12 @@ import (
 	"main/internal/dagger"
 )
 
-type Autodetection struct{}
+type Autodetection struct {
+	// Used to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
+	// +optional
+	// +default="alpine:latest"
+	InternalImage string
+}
 
 // Expose node auto dection runtime information
 func (a *Autodetection) Node(
@@ -18,7 +23,7 @@ func (a *Autodetection) Node(
 	// +optional
 	patternExclusions []string,
 ) (*NodeAnalyzer, error) {
-	return newNodeAnalyzer(ctx, src, patternExclusions)
+	return newNodeAnalyzer(ctx, src, patternExclusions, a.InternalImage)
 }
 
 // Expose OCI dection runtime information
@@ -30,5 +35,5 @@ func (a *Autodetection) Oci(
 	// +optional
 	patternExclusions []string,
 ) (*OciAnalyzer, error) {
-	return newOciAnalyzer(ctx, src, patternExclusions)
+	return newOciAnalyzer(ctx, src, patternExclusions, a.InternalImage)
 }

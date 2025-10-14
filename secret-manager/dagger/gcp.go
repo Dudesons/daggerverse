@@ -20,6 +20,10 @@ const (
 
 type GcpSecretManager struct {
 	secretManagerClient *secretmanager.Client
+	// Used to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
+	// +optional
+	// +default="alpine:latest"
+	InternalImage string
 }
 
 func newGcpSecretManager() *GcpSecretManager {
@@ -31,7 +35,7 @@ func (m *GcpSecretManager) withCredentials(
 	filePath *dagger.File,
 	gcloudFolder *dagger.Directory,
 ) error {
-	syncFileToSandboxCtr := dag.Container().From("alpine:latest")
+	syncFileToSandboxCtr := dag.Container().From(m.InternalImage)
 
 	if filePath != nil {
 		_, err := syncFileToSandboxCtr.

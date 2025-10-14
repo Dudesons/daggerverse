@@ -27,10 +27,12 @@ type AwsSecretManager struct {
 	Profile string
 	// +private
 	AwsFolder *dagger.Directory
+	// +private
+	InternalImage string
 }
 
 func newAwsSecretManager() *AwsSecretManager {
-	return &AwsSecretManager{}
+	return &AwsSecretManager{InternalImage: "alpine:latest"}
 }
 
 // Authenticate to AWS using access and secret key
@@ -65,6 +67,13 @@ func (m *AwsSecretManager) WithProfile(name string) *AwsSecretManager {
 	return m
 }
 
+// Used to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
+func (m *AwsSecretManager) WithInternalImage(name string) *AwsSecretManager {
+	m.InternalImage = name
+
+	return m
+}
+
 func (m *AwsSecretManager) auth(ctx context.Context) error {
 	config := &aws.Config{}
 
@@ -76,7 +85,7 @@ func (m *AwsSecretManager) auth(ctx context.Context) error {
 		// Sync folder to sandbox
 		_, err := dag.
 			Container().
-			From("alpine:latest").
+			From(m.InternalImage).
 			WithMountedDirectory(awsCredentialsPath, m.AwsFolder).
 			Directory(awsCredentialsPath).
 			Export(ctx, awsCredentialsPath)
