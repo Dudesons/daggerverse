@@ -27,10 +27,12 @@ type AwsSecretManager struct {
 	Profile string
 	// +private
 	AwsFolder *dagger.Directory
+	// +private
+	InternalImage string
 }
 
-func newAwsSecretManager() *AwsSecretManager {
-	return &AwsSecretManager{}
+func newAwsSecretManager(internalImage string) *AwsSecretManager {
+	return &AwsSecretManager{InternalImage: internalImage}
 }
 
 // Authenticate to AWS using access and secret key
@@ -76,7 +78,7 @@ func (m *AwsSecretManager) auth(ctx context.Context) error {
 		// Sync folder to sandbox
 		_, err := dag.
 			Container().
-			From("alpine:latest").
+			From(m.InternalImage).
 			WithMountedDirectory(awsCredentialsPath, m.AwsFolder).
 			Directory(awsCredentialsPath).
 			Export(ctx, awsCredentialsPath)

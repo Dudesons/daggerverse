@@ -36,10 +36,10 @@ func newAnalyzer(dir *dagger.Directory, patternExclusions []string, patternMatch
 	}, nil
 }
 
-func (a *analyzer) run(ctx context.Context) error {
+func (a *analyzer) run(ctx context.Context, internalImage string) error {
 	_, err := dag.
 		Container().
-		From("alpine:latest").
+		From(internalImage).
 		WithMountedDirectory(analyzeFolder, a.dir).
 		Directory(analyzeFolder).
 		Export(ctx, analyzeFolder)

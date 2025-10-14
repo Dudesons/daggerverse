@@ -19,11 +19,14 @@ const (
 )
 
 type GcpSecretManager struct {
+	// +private
+	InternalImage string
+
 	secretManagerClient *secretmanager.Client
 }
 
-func newGcpSecretManager() *GcpSecretManager {
-	return &GcpSecretManager{}
+func newGcpSecretManager(internalImage string) *GcpSecretManager {
+	return &GcpSecretManager{InternalImage: internalImage}
 }
 
 func (m *GcpSecretManager) withCredentials(
@@ -31,7 +34,7 @@ func (m *GcpSecretManager) withCredentials(
 	filePath *dagger.File,
 	gcloudFolder *dagger.Directory,
 ) error {
-	syncFileToSandboxCtr := dag.Container().From("alpine:latest")
+	syncFileToSandboxCtr := dag.Container().From(m.InternalImage)
 
 	if filePath != nil {
 		_, err := syncFileToSandboxCtr.

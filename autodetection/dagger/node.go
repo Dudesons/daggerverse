@@ -69,7 +69,7 @@ type NodeAnalyzer struct {
 	PkgJsonRep string
 }
 
-func newNodeAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string) (*NodeAnalyzer, error) {
+func newNodeAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusions []string, internalImage string) (*NodeAnalyzer, error) {
 	anlzr, err := newAnalyzer(
 		dir,
 		append(patternExclusions, defaultNodeExclude...),
@@ -79,7 +79,7 @@ func newNodeAnalyzer(ctx context.Context, dir *dagger.Directory, patternExclusio
 		return nil, err
 	}
 
-	err = anlzr.run(ctx)
+	err = anlzr.run(ctx, internalImage)
 	if err != nil {
 		return nil, err
 	}
@@ -142,6 +142,10 @@ func (n *NodeAnalyzer) GetEngineVersion() (string, error) {
 	info, err := n.toPkgJson()
 	if err != nil {
 		return "", err
+	}
+
+	if info.Engines == nil {
+		return "", fmt.Errorf("no engines found, more details: https://docs.npmjs.com/cli/v7/configuring-npm/package-json#engines")
 	}
 
 	nodeEngineVersion := regexp.
