@@ -3,7 +3,19 @@ name: CI
 on:
   push:
     branches: [main]
-  pull_request:
+  pull_request: {}
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: "Enable debug mode (pause execution on failure)"
+        required: false
+        type: choice
+        options: [ "true","false" ]
+        default: "false"
+
+env:
+  DAGGER_PROGRESS: ${{ (inputs.debug || 'false') == 'true' && 'plain' || 'dots' }}
+
 
 jobs:
   test:
