@@ -309,7 +309,7 @@ func (n *Node) Run(
 			"sh",
 			"-c",
 			fmt.Sprintf(
-				"{{ %s 2>&1; echo -n $? > /outputs/exit_code; }} | tee /outputs/output.txt",
+				"{ %s 2>&1; echo -n $? > /outputs/exit_code; } | tee /outputs/output.txt",
 				strings.Join(baseCommand, " "),
 			),
 		}
