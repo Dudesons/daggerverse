@@ -28,7 +28,7 @@ func (n *Node) WithVersion(
 	if isAlpine {
 		baseImage += "-alpine"
 	}
-	n.Ctr = dag.Container().From(baseImage)
+	n.Ctr = dag.Container().From(baseImage).WithExec([]string{"mkdir", "/outputs"})
 
 	n.BaseImageRef = baseImage
 
