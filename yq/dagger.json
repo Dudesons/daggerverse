@@ -1,8 +1,9 @@
 {
   "name": "yq",
-  "engineVersion": "v0.19.2",
+  "engineVersion": "v0.19.11",
   "sdk": {
     "source": "go"
   },
-  "source": "dagger"
+  "source": "dagger",
+  "disableDefaultFunctionCaching": true
 }

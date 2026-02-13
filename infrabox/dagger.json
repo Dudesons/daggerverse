@@ -1,6 +1,6 @@
 {
   "name": "infrabox",
-  "engineVersion": "v0.19.2",
+  "engineVersion": "v0.19.11",
   "sdk": {
     "source": "go"
   },
@@ -10,5 +10,6 @@
       "source": "../utils"
     }
   ],
-  "source": "dagger"
+  "source": "dagger",
+  "disableDefaultFunctionCaching": true
 }
