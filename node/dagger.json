@@ -8,6 +8,10 @@
     {
       "name": "autodetection",
       "source": "../autodetection"
+    },
+    {
+      "name": "utils",
+      "source": "../utils"
     }
   ],
   "source": "dagger",

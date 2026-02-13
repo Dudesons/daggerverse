@@ -79,6 +79,35 @@ func (n *Node) SetupSystem(
 	return n
 }
 
+// Add a new environment variable for the container
+func (n *Node) WithEnvVar(
+	name string,
+	// Indicate the value of the env var
+	// +optional
+	value string,
+	// Indicate the env var is a secret with this value
+	// +optional
+	secret *dagger.Secret,
+) *Node {
+	if value != "" {
+		n.Ctr = n.Ctr.WithEnvVariable(name, value)
+	} else {
+		n.Ctr = n.Ctr.WithSecretVariable(name, secret)
+	}
+
+	return n
+}
+
+// Add a new environment variable for the container
+func (n *Node) WithDotEnv(
+	// Dotenv format data to inject as environment variables as secret
+	data *dagger.Secret,
+) *Node {
+	n.Ctr = dag.Utils().WithDotEnvSecret(n.Ctr, data)
+
+	return n
+}
+
 // Execute all commands
 func (n *Node) Do(ctx context.Context) (string, error) {
 	return n.Ctr.Stdout(ctx)

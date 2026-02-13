@@ -7,9 +7,17 @@ func (n *Node) Container() *dagger.Container {
 	return n.Ctr
 }
 
-// Return the current working directory
-func (n *Node) Directory() *dagger.Directory {
-	return n.Ctr.Directory(workdir)
+// Return a directory by default the current working directory
+func (n *Node) Directory(
+	// Define permission on the package in the registry
+	// +optional
+	path string,
+) *dagger.Directory {
+	if path == "" {
+		return n.Ctr.Directory(workdir)
+	}
+
+	return n.Ctr.Directory(path)
 }
 
 // Open a shell in the current container or execute a command inside it, like node

@@ -48,24 +48,26 @@ func (n *Node) Pipeline(
 ) (string, error) {
 	pipeline := n.Install()
 
+	// TODO(how we handle capture output later define if we keep this function or change the return type for Node then user decide what to do)
+
 	for _, hook := range preHooks {
-		pipeline = pipeline.Run(hook)
+		pipeline = pipeline.Run(hook, false)
 	}
 
 	if n.DetectLint {
-		pipeline = pipeline.Lint()
+		pipeline = pipeline.Lint(false)
 	}
 
 	if n.DetectTest {
-		pipeline = pipeline.Test()
+		pipeline = pipeline.Test(false)
 	}
 
 	// TODO(Move it at the end)
 	for _, hook := range postHooks {
-		pipeline = pipeline.Run(hook)
+		pipeline = pipeline.Run(hook, false)
 	}
 
-	pipeline = pipeline.Build()
+	pipeline = pipeline.Build(false)
 
 	if n.DetectPackage {
 		return pipeline.

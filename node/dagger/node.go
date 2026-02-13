@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/google/uuid"
 	"golang.org/x/sync/errgroup"
 	"main/internal/dagger"
 	"path/filepath"
 	"strconv"
+	"strings"
 )
 
 // Return the Node container with the right base image
@@ -26,7 +28,7 @@ func (n *Node) WithVersion(
 	if isAlpine {
 		baseImage += "-alpine"
 	}
-	n.Ctr = dag.Container().From(baseImage)
+	n.Ctr = dag.Container().From(baseImage).WithExec([]string{"mkdir", "/outputs"})
 
 	n.BaseImageRef = baseImage
 
@@ -284,6 +286,8 @@ func (n *Node) prepareWorkspaceYarnOption() []string {
 func (n *Node) Run(
 	// Command from the package.json to run
 	command []string,
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	captureOutput bool,
 ) *Node {
 	baseCommand := []string{n.PkgMgr}
 
@@ -298,10 +302,22 @@ func (n *Node) Run(
 		}
 	}
 
-	baseCommand = append(baseCommand, "run")
+	baseCommand = append(append(baseCommand, "run"), command...)
+
+	if captureOutput {
+		baseCommand = []string{
+			"sh",
+			"-c",
+			fmt.Sprintf(
+				"{ %s 2>&1; echo -n $? > /outputs/exit_code; } | tee /outputs/output.txt",
+				strings.Join(baseCommand, " "),
+			),
+		}
+	}
+
 	n.Ctr = n.
 		Ctr.
-		WithExec(append(baseCommand, command...))
+		WithExec(baseCommand)
 	return n
 }
 
@@ -312,25 +328,39 @@ func (n *Node) Install() *Node {
 }
 
 // Execute lint command
-func (n *Node) Lint() *Node {
-	return n.Run([]string{"lint"})
+func (n *Node) Lint(
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	// +optional
+	// +default=false
+	captureOutput bool,
+) *Node {
+	return n.Run([]string{"lint"}, captureOutput)
 }
 
 // Execute test command
-func (n *Node) Test() *Node {
-	return n.Run([]string{"test"})
+func (n *Node) Test(
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	// +optional
+	// +default=false
+	captureOutput bool,
+) *Node {
+	return n.Run([]string{"test"}, captureOutput)
 }
 
 // Execute test commands in parallel
 func (n *Node) ParallelTest(
 	ctx context.Context,
 	cmds [][]string,
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	// +optional
+	// +default=false
+	captureOutput bool,
 ) error {
 	var eg errgroup.Group
 
 	for _, cmd := range cmds {
 		eg.Go(func() error {
-			_, err := n.Run(cmd).Do(ctx)
+			_, err := n.Run(cmd, captureOutput).Do(ctx)
 			return err
 		})
 	}
@@ -339,13 +369,23 @@ func (n *Node) ParallelTest(
 }
 
 // Execute clean command
-func (n *Node) Clean() *Node {
-	return n.Run([]string{"clean"})
+func (n *Node) Clean(
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	// +optional
+	// +default=false
+	captureOutput bool,
+) *Node {
+	return n.Run([]string{"clean"}, captureOutput)
 }
 
 // Execute the build command
-func (n *Node) Build() *Node {
-	return n.Run([]string{"build"})
+func (n *Node) Build(
+	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
+	// +optional
+	// +default=false
+	captureOutput bool,
+) *Node {
+	return n.Run([]string{"build"}, captureOutput)
 }
 
 // Execute the publish which push a package to a registry
