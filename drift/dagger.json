@@ -1,6 +1,6 @@
 {
   "name": "drift",
-  "engineVersion": "v0.19.2",
+  "engineVersion": "v0.19.11",
   "sdk": {
     "source": "go"
   },
@@ -15,5 +15,6 @@
       "pin": "4ad0f0317fd57c41001b48c5a9a3a49d39e43210"
     }
   ],
-  "source": "dagger"
+  "source": "dagger",
+  "disableDefaultFunctionCaching": true
 }
