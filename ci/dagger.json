@@ -14,8 +14,8 @@
       "source": "../infrabox"
     },
     {
-      "name": "node",
-      "source": "../node"
+      "name": "nodejs",
+      "source": "../nodejs"
     },
     {
       "name": "yq",

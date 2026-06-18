@@ -11,8 +11,8 @@ import (
 	"strings"
 )
 
-// Return the Node container with the right base image
-func (n *Node) WithVersion(
+// Return the Nodejs container with the right base image
+func (n *Nodejs) WithVersion(
 	// The image name to use
 	// +optional
 	// +default="node"
@@ -23,7 +23,7 @@ func (n *Node) WithVersion(
 	// +optional
 	// +default="true"
 	isAlpine bool,
-) *Node {
+) *Nodejs {
 	baseImage := image + ":" + version
 	if isAlpine {
 		baseImage += "-alpine"
@@ -35,13 +35,13 @@ func (n *Node) WithVersion(
 	return n
 }
 
-// Return the Node container with an environment variable to use in your npmrc file
-func (n *Node) WithNpmrcTokenEnv(
+// Return the Nodejs container with an environment variable to use in your npmrc file
+func (n *Nodejs) WithNpmrcTokenEnv(
 	// The name of the environment variable where the npmrc token is stored
 	name string,
 	// The value of the token
 	value *dagger.Secret,
-) *Node {
+) *Nodejs {
 	n.NpmrcTokenName = name
 	n.NpmrcToken = value
 	n.Ctr = n.Ctr.WithSecretVariable(name, value)
@@ -49,19 +49,19 @@ func (n *Node) WithNpmrcTokenEnv(
 	return n
 }
 
-// Return the Node container with npmrc file
-func (n *Node) WithNpmrcTokenFile(
+// Return the Nodejs container with npmrc file
+func (n *Nodejs) WithNpmrcTokenFile(
 	// The npmrc file to inject in the container
 	npmrcFile *dagger.Secret,
-) *Node {
+) *Nodejs {
 	n.NpmrcFile = npmrcFile
 	n.Ctr = n.Ctr.WithMountedSecret(workdir+"/.npmrc", npmrcFile)
 
 	return n
 }
 
-// Return the Node container setup with the right package manager and optionaly cache setup
-func (n *Node) WithPackageManager(
+// Return the Nodejs container setup with the right package manager and optionaly cache setup
+func (n *Nodejs) WithPackageManager(
 	// The package manager to use
 	packageManager string,
 	// Disable mounting cache volumes.
@@ -70,7 +70,7 @@ func (n *Node) WithPackageManager(
 	// Define a specific version of the package manager.
 	// +optional
 	version string,
-) *Node {
+) *Nodejs {
 	switch packageManager {
 	case "npm":
 		return n.WithNpm(disableCache, version)
@@ -81,15 +81,15 @@ func (n *Node) WithPackageManager(
 	}
 }
 
-// Return the Node container with npm setup as an entrypoint and npm cache setup
-func (n *Node) WithNpm(
+// Return the Nodejs container with npm setup as an entrypoint and npm cache setup
+func (n *Nodejs) WithNpm(
 	// Disable mounting cache volumes.
 	// +optional
 	disableCache bool,
 	// Define a specific version of npm.
 	// +optional
 	version string,
-) *Node {
+) *Nodejs {
 	n.PkgMgr = "npm"
 
 	if !disableCache {
@@ -109,15 +109,15 @@ func (n *Node) WithNpm(
 	return n
 }
 
-// Return the Node container with yarn setup as an entrypoint and yarn cache setup
-func (n *Node) WithYarn(
+// Return the Nodejs container with yarn setup as an entrypoint and yarn cache setup
+func (n *Nodejs) WithYarn(
 	// Disable mounting cache volumes.
 	// +optional
 	disableCache bool,
 	// Define a specific version of npm.
 	// +optional
 	version string,
-) *Node {
+) *Nodejs {
 	n.PkgMgr = "yarn"
 
 	if !disableCache {
@@ -137,14 +137,14 @@ func (n *Node) WithYarn(
 	return n
 }
 
-// Return the Node container with the source code, 'node_modules' cache set up and workdir set
-func (n *Node) WithSource(
+// Return the Nodejs container with the source code, 'node_modules' cache set up and workdir set
+func (n *Nodejs) WithSource(
 	// The source code
 	src *dagger.Directory,
 	// Indicate if the directory is mounted or persisted in the container
 	// +optional
 	persisted bool,
-) *Node {
+) *Nodejs {
 	if persisted {
 		n.Ctr = n.
 			Ctr.
@@ -172,8 +172,8 @@ func (n *Node) WithSource(
 	return n
 }
 
-// Return the Node container with an additional file in the working dir
-func (n *Node) WithFile(
+// Return the Nodejs container with an additional file in the working dir
+func (n *Nodejs) WithFile(
 	// The file to use
 	file *dagger.File,
 	// The path where the file should be mounted
@@ -181,7 +181,7 @@ func (n *Node) WithFile(
 	// Indicate if the file is mounted or persisted in the container
 	// +optional
 	persisted bool,
-) *Node {
+) *Nodejs {
 	if persisted {
 		n.Ctr = n.
 			Ctr.
@@ -195,8 +195,8 @@ func (n *Node) WithFile(
 	return n
 }
 
-// Return the Node container with an additional directory in the working dir
-func (n *Node) WithDirectory(
+// Return the Nodejs container with an additional directory in the working dir
+func (n *Nodejs) WithDirectory(
 	// The directory to use
 	dir *dagger.Directory,
 	// The path where the directory should be mounted
@@ -204,7 +204,7 @@ func (n *Node) WithDirectory(
 	// Indicate if the directory is mounted or persisted in the container
 	// +optional
 	persisted bool,
-) *Node {
+) *Nodejs {
 	if persisted {
 		n.Ctr = n.
 			Ctr.
@@ -218,8 +218,8 @@ func (n *Node) WithDirectory(
 	return n
 }
 
-// Return the Node container with an additional cache volume in the working dir
-func (n *Node) WithCache(
+// Return the Nodejs container with an additional cache volume in the working dir
+func (n *Nodejs) WithCache(
 	// The cache volume to use
 	cache *dagger.CacheVolume,
 	// The path where the cache volume should be mounted
@@ -227,7 +227,7 @@ func (n *Node) WithCache(
 	// Indicate if the cache volume is mounted or persisted in the container
 	// +optional
 	persisted bool,
-) *Node {
+) *Nodejs {
 	if persisted {
 		tmpPath := "/tmp/" + uuid.New().String() + path
 		n.Ctr = n.
@@ -245,7 +245,7 @@ func (n *Node) WithCache(
 }
 
 // Return a node container with the 'NODE_ENV' set to production
-func (n *Node) Production() *Node {
+func (n *Nodejs) Production() *Nodejs {
 	n.IsProduction = true
 
 	n.Ctr = n.
@@ -255,7 +255,7 @@ func (n *Node) Production() *Node {
 }
 
 // Prepare the command to inject workspaces
-func (n *Node) WithWorkspace(workspace string) *Node {
+func (n *Nodejs) WithWorkspace(workspace string) *Nodejs {
 	if n.Workspaces == nil {
 		n.Workspaces = []string{}
 	}
@@ -264,7 +264,7 @@ func (n *Node) WithWorkspace(workspace string) *Node {
 	return n
 }
 
-func (n *Node) prepareWorkspaceNpmOption() []string {
+func (n *Nodejs) prepareWorkspaceNpmOption() []string {
 	options := []string{}
 	for _, i := range n.Workspaces {
 		options = append(options, "--workspace="+i)
@@ -273,7 +273,7 @@ func (n *Node) prepareWorkspaceNpmOption() []string {
 	return options
 }
 
-func (n *Node) prepareWorkspaceYarnOption() []string {
+func (n *Nodejs) prepareWorkspaceYarnOption() []string {
 	options := []string{}
 	for _, i := range n.Workspaces {
 		options = append(options, []string{"workspace", i}...)
@@ -283,12 +283,12 @@ func (n *Node) prepareWorkspaceYarnOption() []string {
 }
 
 // Execute a command from the package.json
-func (n *Node) Run(
+func (n *Nodejs) Run(
 	// Command from the package.json to run
 	command []string,
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
 	captureOutput bool,
-) *Node {
+) *Nodejs {
 	baseCommand := []string{n.PkgMgr}
 
 	if n.Workspaces != nil {
@@ -322,33 +322,33 @@ func (n *Node) Run(
 }
 
 // Install node modules
-func (n *Node) Install() *Node {
+func (n *Nodejs) Install() *Nodejs {
 	n.Ctr = n.Ctr.WithExec([]string{n.PkgMgr, "install"})
 	return n
 }
 
 // Execute lint command
-func (n *Node) Lint(
+func (n *Nodejs) Lint(
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
 	// +optional
 	// +default=false
 	captureOutput bool,
-) *Node {
+) *Nodejs {
 	return n.Run([]string{"lint"}, captureOutput)
 }
 
 // Execute test command
-func (n *Node) Test(
+func (n *Nodejs) Test(
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
 	// +optional
 	// +default=false
 	captureOutput bool,
-) *Node {
+) *Nodejs {
 	return n.Run([]string{"test"}, captureOutput)
 }
 
 // Execute test commands in parallel
-func (n *Node) ParallelTest(
+func (n *Nodejs) ParallelTest(
 	ctx context.Context,
 	cmds [][]string,
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
@@ -369,27 +369,27 @@ func (n *Node) ParallelTest(
 }
 
 // Execute clean command
-func (n *Node) Clean(
+func (n *Nodejs) Clean(
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
 	// +optional
 	// +default=false
 	captureOutput bool,
-) *Node {
+) *Nodejs {
 	return n.Run([]string{"clean"}, captureOutput)
 }
 
 // Execute the build command
-func (n *Node) Build(
+func (n *Nodejs) Build(
 	// Indicate if we want to capture in /outputs the stdout + exit code in order to extract the folder
 	// +optional
 	// +default=false
 	captureOutput bool,
-) *Node {
+) *Nodejs {
 	return n.Run([]string{"build"}, captureOutput)
 }
 
 // Execute the publish which push a package to a registry
-func (n *Node) Publish(
+func (n *Nodejs) Publish(
 	// Define permission on the package in the registry
 	// +optional
 	access string,
@@ -399,7 +399,7 @@ func (n *Node) Publish(
 	// Indicate to dry run the publishing
 	// +optional
 	dryRun bool,
-) *Node {
+) *Nodejs {
 	publishCmd := []string{n.PkgMgr, "publish"}
 
 	if access != "" {
@@ -419,13 +419,13 @@ func (n *Node) Publish(
 }
 
 // Bump the package version
-func (n *Node) BumpVersion(
+func (n *Nodejs) BumpVersion(
 	// Define the bump version strategy (major | minor | patch | premajor | preminor | prepatch | prerelease)
 	strategy string,
 	// The message will use it as a commit message when creating a version commit. If the message config contains %s then that will be replaced with the resulting version number
 	// +optional
 	message string,
-) *Node {
+) *Nodejs {
 	versionCmd := []string{n.PkgMgr, "version", strategy}
 
 	if message != "" {
