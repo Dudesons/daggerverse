@@ -8,20 +8,20 @@ import (
 	"strings"
 )
 
-func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
+func (c *Ci) Nodejs(ctx context.Context, testDataSrc *dagger.Directory) error {
 	var eg errgroup.Group
 
 	// Lazy mode pipeline with oci build
 	eg.Go(func() error {
 		refs, err := dag.
-			Node().
+			Nodejs().
 			WithAutoSetup(
 				"testdata-myapi",
 				testDataSrc.Directory("myapi"),
 			).
 			Pipeline(
 				ctx,
-				dagger.NodePipelineOpts{
+				dagger.NodejsPipelineOpts{
 					DryRun: true,
 					TTL:    "5m",
 					IsOci:  true,
@@ -36,7 +36,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 	// Explicit mode pipeline with oci build
 	eg.Go(func() error {
 		refs, err := dag.
-			Node().
+			Nodejs().
 			WithPipelineID("testdata-myapi").
 			WithVersion("20.9.0").
 			WithSource(testDataSrc.Directory("myapi")).
@@ -44,7 +44,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 			Install().
 			Test().
 			Build().
-			OciBuild(ctx, nil, dagger.NodeOciBuildOpts{IsTTL: true, TTL: "5m"})
+			OciBuild(ctx, nil, dagger.NodejsOciBuildOpts{IsTTL: true, TTL: "5m"})
 
 		fmt.Println("image: " + strings.Join(refs, "\n"))
 
@@ -54,14 +54,14 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 	//Lazy mode pipeline with package build
 	eg.Go(func() error {
 		_, err := dag.
-			Node().
+			Nodejs().
 			WithAutoSetup(
 				"testdata-lib",
 				testDataSrc.Directory("mylib"),
 			).
 			Pipeline(
 				ctx,
-				dagger.NodePipelineOpts{
+				dagger.NodejsPipelineOpts{
 					DryRun:        true,
 					PackageDevTag: "beta",
 				},
@@ -73,7 +73,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 	// Explicit mode pipeline with package build
 	eg.Go(func() error {
 		_, err := dag.
-			Node().
+			Nodejs().
 			WithPipelineID("testdata-mylib").
 			WithVersion("20.9.0").
 			WithSource(testDataSrc.Directory("mylib")).
@@ -81,7 +81,7 @@ func (c *Ci) Node(ctx context.Context, testDataSrc *dagger.Directory) error {
 			Install().
 			Test().
 			Build().
-			Publish(dagger.NodePublishOpts{DryRun: true, DevTag: "beta"}).
+			Publish(dagger.NodejsPublishOpts{DryRun: true, DevTag: "beta"}).
 			Do(ctx)
 
 		return err

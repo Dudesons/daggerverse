@@ -11,7 +11,7 @@ const (
 	workdir = "/opt/app"
 )
 
-type Node struct {
+type Nodejs struct {
 	// +private
 	PipelineID string
 	// +private
@@ -55,21 +55,21 @@ type Node struct {
 }
 
 // Define the pipeline id to use
-func (n *Node) WithPipelineId(
+func (n *Nodejs) WithPipelineId(
 	// The name to give to the pipeline
 	pipelineID string,
-) *Node {
+) *Nodejs {
 	n.PipelineID = pipelineID
 
 	return n
 }
 
 // Setup system component like installing packages
-func (n *Node) SetupSystem(
+func (n *Nodejs) SetupSystem(
 	// Indicate attempted system package to install
 	// +optional
 	systemSetupCmds [][]string,
-) *Node {
+) *Nodejs {
 	n.SystemSetupCmds = append(n.SystemSetupCmds, systemSetupCmds...)
 
 	for _, i := range n.SystemSetupCmds {
@@ -80,7 +80,7 @@ func (n *Node) SetupSystem(
 }
 
 // Add a new environment variable for the container
-func (n *Node) WithEnvVar(
+func (n *Nodejs) WithEnvVar(
 	name string,
 	// Indicate the value of the env var
 	// +optional
@@ -88,7 +88,7 @@ func (n *Node) WithEnvVar(
 	// Indicate the env var is a secret with this value
 	// +optional
 	secret *dagger.Secret,
-) *Node {
+) *Nodejs {
 	if value != "" {
 		n.Ctr = n.Ctr.WithEnvVariable(name, value)
 	} else {
@@ -99,16 +99,16 @@ func (n *Node) WithEnvVar(
 }
 
 // Add a new environment variable for the container
-func (n *Node) WithDotEnv(
+func (n *Nodejs) WithDotEnv(
 	// Dotenv format data to inject as environment variables as secret
 	data *dagger.Secret,
-) *Node {
+) *Nodejs {
 	n.Ctr = dag.Utils().WithDotEnvSecret(n.Ctr, data)
 
 	return n
 }
 
 // Execute all commands
-func (n *Node) Do(ctx context.Context) (string, error) {
+func (n *Nodejs) Do(ctx context.Context) (string, error) {
 	return n.Ctr.Stdout(ctx)
 }

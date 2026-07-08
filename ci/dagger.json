@@ -1,6 +1,6 @@
 {
   "name": "ci",
-  "engineVersion": "v0.19.11",
+  "engineVersion": "v0.21.7",
   "sdk": {
     "source": "go"
   },
@@ -14,8 +14,8 @@
       "source": "../infrabox"
     },
     {
-      "name": "node",
-      "source": "../node"
+      "name": "nodejs",
+      "source": "../nodejs"
     },
     {
       "name": "yq",

@@ -6,7 +6,7 @@ import (
 )
 
 // Execute the whole pipeline in general used with the function 'with-auto-setup'
-func (n *Node) Pipeline(
+func (n *Nodejs) Pipeline(
 	ctx context.Context,
 	// Define hooks to execute before all
 	// +optional
@@ -48,7 +48,7 @@ func (n *Node) Pipeline(
 ) (string, error) {
 	pipeline := n.Install()
 
-	// TODO(how we handle capture output later define if we keep this function or change the return type for Node then user decide what to do)
+	// TODO(how we handle capture output later define if we keep this function or change the return type for Nodejs then user decide what to do)
 
 	for _, hook := range preHooks {
 		pipeline = pipeline.Run(hook, false)

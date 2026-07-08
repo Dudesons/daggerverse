@@ -10,7 +10,7 @@ import (
 )
 
 // Build a production image and push to one or more registries
-func (n *Node) OciBuild(
+func (n *Nodejs) OciBuild(
 	ctx context.Context,
 	// Define path to fo file to fetch from the build container
 	// +optional
@@ -46,7 +46,7 @@ func (n *Node) OciBuild(
 		registries = []string{ttlRegistry}
 	}
 
-	productionBuild := &Node{
+	productionBuild := &Nodejs{
 		PipelineID:      n.PipelineID,
 		PkgMgr:          n.PkgMgr,
 		Platform:        n.Platform,

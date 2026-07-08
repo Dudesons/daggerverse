@@ -7,7 +7,7 @@ import (
 )
 
 // Allow to let the pipeline to be setup automatically based on the package.json aka lazy mode
-func (n *Node) WithAutoSetup(
+func (n *Nodejs) WithAutoSetup(
 	ctx context.Context,
 	// A name to use in the pipeline and injected in cache keys
 	pipelineId string,
@@ -34,16 +34,16 @@ func (n *Node) WithAutoSetup(
 	// Define a specific version of the package manager.
 	// +optional
 	packageManagerVersion string,
-	// Node workspaces to use during the pipeline
+	// Nodejs workspaces to use during the pipeline
 	// +optional
 	workspaces []string,
 	// Used for autodiscovery to overwrite the default image used for internal action (mainly used to avoid rate limit with dockerhub)
 	// +optional
 	// +default="alpine:latest"
 	internalImage string,
-) (*Node, error) {
+) (*Nodejs, error) {
 	var err error
-	nodeAutoSetup := &Node{
+	nodeAutoSetup := &Nodejs{
 		PipelineID:      pipelineId,
 		PkgMgr:          "npm",
 		Platform:        containerPlatform,
